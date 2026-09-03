@@ -1,0 +1,32 @@
+# Root
+.env
+.env.*
+!.env.example
+
+# Python backend
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/*.log
+
+# Node web
+web/node_modules/
+web/dist/
+web/.vite/
+web/.env
+web/.env.*
+!web/.env.example
+
+# Expo mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/.env
+mobile/.env.*
+!mobile/.env.example
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/

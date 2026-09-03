@@ -1,0 +1,16 @@
+# Python cache and virtualenv
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+*.pyc
+*.pyo
+*.pyd
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Alembic local migration state
+alembic/versions/__pycache__/

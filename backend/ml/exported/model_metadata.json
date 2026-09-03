@@ -1,0 +1,85 @@
+{
+  "selected_model": "Random Forest (Balanced)",
+  "dataset": "UCI Maternal Health Risk Dataset",
+  "features": [
+    "Age",
+    "SystolicBP",
+    "DiastolicBP",
+    "BS",
+    "BodyTemp",
+    "HeartRate"
+  ],
+  "classes": [
+    "green",
+    "yellow",
+    "red"
+  ],
+  "class_mapping": {
+    "green": 0,
+    "yellow": 1,
+    "red": 2
+  },
+  "priority_metric": "high_risk_recall",
+  "metrics": {
+    "test_accuracy": 0.7832512315270936,
+    "test_f1_macro": 0.7870300561265205,
+    "high_risk_recall": 0.9272727272727272,
+    "high_risk_precision": 0.8360655737704918,
+    "per_class_recall": {
+      "green": 0.7654320987654321,
+      "yellow": 0.6865671641791045,
+      "red": 0.9272727272727272
+    },
+    "per_class_precision": {
+      "green": 0.8051948051948052,
+      "yellow": 0.7076923076923077,
+      "red": 0.8360655737704918
+    },
+    "confusion_matrix": [
+      [
+        62,
+        17,
+        2
+      ],
+      [
+        13,
+        46,
+        8
+      ],
+      [
+        2,
+        2,
+        51
+      ]
+    ],
+    "cv_accuracy_mean": 0.7595167764901916,
+    "cv_f1_macro_mean": 0.7652590484431563
+  },
+  "scaler_params": {
+    "mean": [
+      29.91245376078915,
+      113.10480887792848,
+      76.29099876695437,
+      8.655758323057952,
+      98.66337854500617,
+      74.11590628853267
+    ],
+    "scale": [
+      13.49698711490992,
+      18.42437441097333,
+      13.790457765775612,
+      3.203020655205204,
+      1.3720040077459246,
+      8.271823491994382
+    ],
+    "var": [
+      182.1686611800444,
+      339.45757243572876,
+      190.1767253896409,
+      10.259341317671172,
+      1.8823949972708791,
+      68.42306388271015
+    ]
+  },
+  "model_type": "RandomForestClassifier"
+}

@@ -1,0 +1,7 @@
+# Expo and React Native
+node_modules/
+.expo/
+dist/
+.env
+.env.*
+!.env.example
