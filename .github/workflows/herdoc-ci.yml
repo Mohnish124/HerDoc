@@ -34,7 +34,7 @@ jobs:
         env:
           PYTHONPATH: .
           DATABASE_URL: "sqlite:///./test.db"
-          SECRET_KEY: "test-secret-key-for-ci"
+          JWT_SECRET: "test-jwt-secret-key-for-ci"
           WEB_ORIGIN: "http://localhost:3000"
         run: |
           pytest
