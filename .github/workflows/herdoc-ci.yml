@@ -33,5 +33,8 @@ jobs:
         working-directory: backend
         env:
           PYTHONPATH: .
+          DATABASE_URL: "sqlite:///./test.db"
+          SECRET_KEY: "test-secret-key-for-ci"
+          WEB_ORIGIN: "http://localhost:3000"
         run: |
           pytest
