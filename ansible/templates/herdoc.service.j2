@@ -1,0 +1,22 @@
+[Unit]
+Description=HERDOC FastAPI backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ herdoc_app_user }}
+Group={{ herdoc_app_group }}
+WorkingDirectory={{ herdoc_app_root }}/backend
+EnvironmentFile=/etc/herdoc.env
+ExecStart={{ herdoc_app_root }}/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port {{ herdoc_app_port }}
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ herdoc_app_root }}
+
+[Install]
+WantedBy=multi-user.target

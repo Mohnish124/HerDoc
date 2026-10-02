@@ -1,0 +1,67 @@
+{
+  "annotations": { "list": [] },
+  "description": "Operational overview for the HERDOC FastAPI backend.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "herdoc-prometheus" },
+      "fieldConfig": { "defaults": { "max": 1, "min": 0, "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto" },
+      "targets": [{ "expr": "min(up{job=\"herdoc-backend\"})", "legendFormat": "scrape availability", "refId": "A" }],
+      "title": "Availability (Prometheus scrape up)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "herdoc-prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(herdoc_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p95", "refId": "A" }, { "expr": "histogram_quantile(0.50, sum by (le) (rate(herdoc_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p50", "refId": "B" }],
+      "title": "Request latency", "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "herdoc-prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 18, "y": 0 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "expr": "100 * sum(rate(herdoc_http_errors_total[5m])) / clamp_min(sum(rate(herdoc_http_requests_total[5m])), 1e-9)", "legendFormat": "4xx + 5xx errors", "refId": "A" }],
+      "title": "Error rate", "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "herdoc-prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [{ "expr": "sum by (path) (rate(herdoc_http_requests_total[5m]))", "legendFormat": "{{path}}", "refId": "A" }],
+      "title": "Request rate by route", "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "herdoc-prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 16 },
+      "id": 5,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "expr": "herdoc_process_uptime_seconds", "legendFormat": "uptime", "refId": "A" }],
+      "title": "Process uptime", "type": "stat"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["herdoc", "fastapi"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "HERDOC API Overview",
+  "uid": "herdoc-api-overview",
+  "version": 1
+}

@@ -1,0 +1,125 @@
+---
+- name: Configure a Linux host for the HERDOC API
+  hosts: herdoc_servers
+  become: true
+
+  tasks:
+    - name: Require deployment secrets from the operator environment
+      ansible.builtin.assert:
+        that:
+          - lookup('env', 'HERDOC_DATABASE_URL') | length > 0
+          - lookup('env', 'HERDOC_JWT_SECRET') | length >= 32
+        fail_msg: Set HERDOC_DATABASE_URL and a 32-character HERDOC_JWT_SECRET before deploying.
+
+    - name: Install Python runtime and build prerequisites
+      ansible.builtin.apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - build-essential
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create the dedicated application group
+      ansible.builtin.group:
+        name: "{{ herdoc_app_group }}"
+        system: true
+
+    - name: Create the dedicated application account
+      ansible.builtin.user:
+        name: "{{ herdoc_app_user }}"
+        group: "{{ herdoc_app_group }}"
+        home: "{{ herdoc_app_root }}"
+        create_home: true
+        shell: /usr/sbin/nologin
+        system: true
+
+    - name: Create application directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ herdoc_app_user }}"
+        group: "{{ herdoc_app_group }}"
+        mode: "0750"
+      loop:
+        - "{{ herdoc_app_root }}"
+        - "{{ herdoc_app_root }}/backend"
+
+    - name: Copy backend application code
+      ansible.builtin.copy:
+        src: "../backend/app/"
+        dest: "{{ herdoc_app_root }}/backend/app/"
+        owner: "{{ herdoc_app_user }}"
+        group: "{{ herdoc_app_group }}"
+        mode: preserve
+
+    - name: Copy Alembic migration files
+      ansible.builtin.copy:
+        src: "../backend/alembic/"
+        dest: "{{ herdoc_app_root }}/backend/alembic/"
+        owner: "{{ herdoc_app_user }}"
+        group: "{{ herdoc_app_group }}"
+        mode: preserve
+
+    - name: Copy backend dependency list and Alembic configuration
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ herdoc_app_root }}/backend/{{ item.dest }}"
+        owner: "{{ herdoc_app_user }}"
+        group: "{{ herdoc_app_group }}"
+        mode: "0640"
+      loop:
+        - { src: "../backend/requirements.txt", dest: "requirements.txt" }
+        - { src: "../backend/alembic.ini", dest: "alembic.ini" }
+
+    - name: Create application virtual environment and install dependencies
+      ansible.builtin.pip:
+        requirements: "{{ herdoc_app_root }}/backend/requirements.txt"
+        virtualenv: "{{ herdoc_app_root }}/venv"
+        virtualenv_command: python3 -m venv
+
+    - name: Manage the application environment file
+      ansible.builtin.template:
+        src: templates/herdoc.env.j2
+        dest: /etc/herdoc.env
+        owner: root
+        group: "{{ herdoc_app_group }}"
+        mode: "0640"
+      no_log: true
+      notify: Restart HERDOC API
+
+    - name: Apply database schema migrations once
+      ansible.builtin.command:
+        cmd: "{{ herdoc_app_root }}/venv/bin/alembic upgrade head"
+        chdir: "{{ herdoc_app_root }}/backend"
+      environment:
+        DATABASE_URL: "{{ lookup('env', 'HERDOC_DATABASE_URL') }}"
+        JWT_SECRET: "{{ lookup('env', 'HERDOC_JWT_SECRET') }}"
+        WEB_ORIGIN: "{{ herdoc_web_origin }}"
+      run_once: true
+      no_log: true
+
+    - name: Install the systemd service unit
+      ansible.builtin.template:
+        src: templates/herdoc.service.j2
+        dest: /etc/systemd/system/herdoc-api.service
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart HERDOC API
+
+    - name: Enable and start the HERDOC API service
+      ansible.builtin.systemd_service:
+        name: herdoc-api
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart HERDOC API
+      ansible.builtin.systemd_service:
+        name: herdoc-api
+        state: restarted
+        daemon_reload: true

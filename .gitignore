@@ -4,7 +4,10 @@
 !.env.example
 
 # Python backend
+backend/venv/
 backend/.venv/
+k8s/secret.local.yaml
+ansible/inventory.ini
 backend/__pycache__/
 backend/.pytest_cache/
 backend/.coverage

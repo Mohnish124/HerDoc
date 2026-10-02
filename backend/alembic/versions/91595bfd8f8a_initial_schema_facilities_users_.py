@@ -36,7 +36,7 @@ def upgrade() -> None:
     sa.Column('password_hash', sa.String(length=255), nullable=True),
     sa.Column('pin_hash', sa.String(length=255), nullable=True),
     sa.Column('facility_id', GUID(length=16), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('failed_login_attempts', sa.Integer(), nullable=False),
     sa.Column('locked_until', sa.DateTime(timezone=True), nullable=True),
@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.Column('user_id', GUID(length=16), nullable=True),
     sa.Column('event_type', sa.String(length=100), nullable=False),
     sa.Column('metadata', sa.JSON(), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -66,7 +66,7 @@ def upgrade() -> None:
     sa.Column('phone', sa.String(length=32), nullable=True),
     sa.Column('village', sa.String(length=255), nullable=False),
     sa.Column('edd', sa.Date(), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['worker_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -76,7 +76,7 @@ def upgrade() -> None:
     sa.Column('id', GUID(length=16), nullable=False),
     sa.Column('user_id', GUID(length=16), nullable=False),
     sa.Column('token_hash', sa.String(length=255), nullable=False),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('revoked_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
@@ -123,7 +123,7 @@ def upgrade() -> None:
     sa.Column('model_risk_level', sa.String(length=20), nullable=False),
     sa.Column('trend_adjusted_level', sa.String(length=20), nullable=False),
     sa.Column('trend_reason', sa.String(length=255), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['visit_id'], ['visits.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
