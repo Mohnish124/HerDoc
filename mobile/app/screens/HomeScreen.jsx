@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -17,6 +19,7 @@ import {
   listAllPatients,
   listPatientVisits,
 } from '../db';
+import { getCurrentCoordinatesIfAvailable, sendEmergencySOS } from '../services/emergency';
 import { getIsConnected, subscribeToConnectivityChanges } from '../services/connectivity';
 import { subscribeToSyncState, synchronizeOfflineData } from '../services/sync';
 import SyncStatusBadge from '../components/SyncStatusBadge';
@@ -45,6 +48,8 @@ export default function HomeScreen({ user, navigation }) {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [sosSending, setSosSending] = useState(false);
 
   // Sync state
   const [isSyncing, setIsSyncing] = useState(false);
@@ -147,6 +152,49 @@ export default function HomeScreen({ user, navigation }) {
     }, [loadPatients, refreshPendingCount]),
   );
 
+  // Emergency SOS: confirm -> GPS (if available) -> backend -> result
+  const notify = useCallback((title, message) => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.alert(`${title}\n\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  }, []);
+
+  const runSOS = useCallback(async () => {
+    setSosSending(true);
+    try {
+      const coordinates = await getCurrentCoordinatesIfAvailable();
+      await sendEmergencySOS({ coordinates });
+      notify(
+        'SOS sent',
+        coordinates
+          ? 'Emergency alert sent with your location.'
+          : 'Emergency alert sent (location was not available).',
+      );
+    } catch (sosError) {
+      notify('SOS failed', sosError?.message || 'Could not send the alert. Call emergency services directly.');
+    } finally {
+      setSosSending(false);
+    }
+  }, [notify]);
+
+  const handleSOSPress = useCallback(() => {
+    if (sosSending) return;
+    const title = 'Send Emergency SOS?';
+    const message = 'This will alert the emergency contact now and share your location if available.';
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        runSOS();
+      }
+      return;
+    }
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Send SOS', style: 'destructive', onPress: runSOS },
+    ]);
+  }, [sosSending, runSOS]);
+
   const filteredPatients = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     if (!normalizedSearch) {
@@ -176,6 +224,20 @@ export default function HomeScreen({ user, navigation }) {
             <Text style={styles.primaryButtonText}>+ New Patient</Text>
           </Pressable>
         </View>
+
+        <Pressable
+          style={[styles.sosButton, sosSending && styles.sosButtonDisabled]}
+          onPress={handleSOSPress}
+          disabled={sosSending}
+          accessibilityRole="button"
+          accessibilityLabel="Emergency SOS"
+        >
+          {sosSending ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.sosButtonText}>🚨 Emergency SOS</Text>
+          )}
+        </Pressable>
 
         <View style={styles.headerTextWrap}>
           <Text style={styles.eyebrow}>ASHA / ANM Field Worker</Text>
@@ -307,6 +369,17 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   title: { fontSize: 26, fontWeight: '800', color: '#0f172a' },
+  sosButton: {
+    backgroundColor: '#dc2626',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    minHeight: 54,
+  },
+  sosButtonDisabled: { opacity: 0.7 },
+  sosButtonText: { color: '#ffffff', fontSize: 18, fontWeight: '800' },
   primaryButton: {
     backgroundColor: '#2563eb',
     borderRadius: 12,

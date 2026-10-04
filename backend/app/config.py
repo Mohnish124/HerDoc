@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(..., min_length=1, description="MySQL SQLAlchemy database URL")
     JWT_SECRET: str = Field(..., min_length=1, description="JWT secret")
     WEB_ORIGIN: str = Field(..., min_length=1, description="Allowed web origin")
+    # Telegram Emergency SOS (backend-only; never expose to mobile/web clients)
+    TELEGRAM_BOT_TOKEN: str = Field(default="", description="Telegram bot token (secret)")
+    TELEGRAM_CHAT_ID: str = Field(default="", description="Telegram chat/group id for SOS alerts")
 
 
 @lru_cache

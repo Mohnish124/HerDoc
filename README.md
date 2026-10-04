@@ -313,3 +313,19 @@ Follow this step-by-step clinical scenario to demonstrate the full end-to-end ca
 ### Step 6: Mobile Pulls Review Decision
 1. On the mobile app, the worker performs a sync pull.
 2. The patient's status updates locally to **Referred** with the doctor's clinical notes displayed on the worker's home screen.
+
+---
+
+## Emergency SOS (Telegram)
+
+Field workers can tap **🚨 Emergency SOS** on the mobile Home screen. After confirmation the app gets GPS (if permitted) and calls `POST /api/emergency` with the user's bearer token. The backend sends the alert through the Telegram Bot API and records an `emergency.sos` entry in `audit_log`.
+
+1. Create a bot with @BotFather and add it to your alert chat/group; get the chat id.
+2. Set in `backend/.env` (backend only, never in mobile/web):
+   ```env
+   TELEGRAM_BOT_TOKEN=
+   TELEGRAM_CHAT_ID=
+   ```
+3. Mobile needs `expo-location`: run `npm install` in `mobile/`.
+
+Responses: `200` sent, `422` invalid input, `401/403` auth, `502` Telegram delivery failed, `503` Telegram not configured. Tests: `pytest tests/test_emergency_api.py` (Telegram mocked).

@@ -21,7 +21,13 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "HerDoc uses your location only to include it in an Emergency SOS alert."
+        }
+      ]
     ]
   }
 }

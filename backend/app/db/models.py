@@ -9,6 +9,7 @@ from app.db.base import Base
 from app.db.uuid_types import GUID
 
 
+
 class UserRole(str, Enum):
     WORKER = "worker"
     DOCTOR = "doctor"

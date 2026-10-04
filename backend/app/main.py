@@ -9,6 +9,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.api.auth import router as auth_router
 from app.api.dashboard import router as dashboard_router
+from app.api.emergency import router as emergency_router
 from app.api.patients import router as patients_router
 from app.api.reviews import router as reviews_router
 from app.api.sync import router as sync_router
@@ -52,6 +53,7 @@ app.include_router(sync_router)
 app.include_router(dashboard_router)
 app.include_router(reviews_router)
 app.include_router(workers_router)
+app.include_router(emergency_router)
 
 
 @app.middleware("http")
