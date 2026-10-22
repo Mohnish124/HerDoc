@@ -34,25 +34,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Log in via email + password.
-   * Access token is stored only in memory via setAccessToken.
-   * Refresh token is stored in httpOnly cookie set by backend.
+   * Shared browser login: the access token is kept only in memory (setAccessToken) and the
+   * refresh token only in the httpOnly cookie set by the backend. The returned user (and its
+   * role) comes from the server, never from what the browser chose.
    */
-  const login = async (email, password) => {
-    const normalizedEmail = String(email || '').trim();
-    const normalizedPassword = String(password || '').trim();
-
-    if (!normalizedEmail || !normalizedPassword) {
-      throw new Error('Email and password are required.');
-    }
-
+  const signIn = async (path, body, fallbackMessage) => {
     let response;
     try {
-      response = await fetch(`${API_BASE_URL}/api/auth/login/web`, {
+      response = await fetch(`${API_BASE_URL}${path}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email: normalizedEmail, password: normalizedPassword }),
+        body: JSON.stringify(body),
       });
     } catch (netErr) {
       throw new Error('Backend server is unreachable. Check your network or API connection.');
@@ -60,7 +53,7 @@ export function AuthProvider({ children }) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const detail = data?.detail || 'Invalid email or password.';
+      const detail = data?.detail || fallbackMessage;
       throw new Error(typeof detail === 'string' ? detail : 'Login failed.');
     }
 
@@ -68,6 +61,28 @@ export function AuthProvider({ children }) {
     setAccessToken(access_token);
     setUser(serverUser);
     return serverUser;
+  };
+
+  /** Staff (admin / doctor): email + password. */
+  const login = async (email, password) => {
+    const normalizedEmail = String(email || '').trim();
+    const normalizedPassword = String(password || '').trim();
+
+    if (!normalizedEmail || !normalizedPassword) {
+      throw new Error('Email and password are required.');
+    }
+    return signIn('/api/auth/login/web', { email: normalizedEmail, password: normalizedPassword }, 'Invalid email or password.');
+  };
+
+  /** Health worker: phone + PIN, through the browser-specific cookie login. */
+  const loginWorker = async (phone, pin) => {
+    const normalizedPhone = String(phone || '').trim();
+    const normalizedPin = String(pin || '').trim();
+
+    if (!normalizedPhone || !normalizedPin) {
+      throw new Error('Phone number and PIN are required.');
+    }
+    return signIn('/api/auth/login/worker/web', { phone: normalizedPhone, pin: normalizedPin }, 'Invalid phone number or PIN.');
   };
 
   /**
@@ -94,6 +109,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user),
     isLoading,
     login,
+    loginWorker,
     logout,
   };
 

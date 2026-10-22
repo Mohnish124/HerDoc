@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { homePathForRole } from '../auth/roles';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -13,32 +14,44 @@ export default function Navbar() {
   };
 
   const isActive = (path) => location.pathname === path;
+  const isWorker = user?.role === 'worker';
 
   return (
     <header className="navbar-container">
       <div className="navbar-content">
         <div className="navbar-left">
-          <Link to="/dashboard" className="brand-logo">
+          <Link to={homePathForRole(user?.role)} className="brand-logo">
             <span className="brand-icon">🩺</span>
             <div className="brand-titles">
               <span className="brand-name">HerDoc</span>
-              <span className="brand-subtitle">PHC Clinical Portal</span>
+              <span className="brand-subtitle">{isWorker ? 'Health Worker Portal' : 'PHC Clinical Portal'}</span>
             </div>
           </Link>
 
           <nav className="navbar-nav">
-            <Link
-              to="/dashboard"
-              className={`nav-link ${isActive('/dashboard') ? 'nav-link-active' : ''}`}
-            >
-              Triage Dashboard
-            </Link>
-            <Link
-              to="/facility"
-              className={`nav-link ${isActive('/facility') ? 'nav-link-active' : ''}`}
-            >
-              Facility Overview
-            </Link>
+            {isWorker ? (
+              <Link
+                to="/worker"
+                className={`nav-link ${isActive('/worker') ? 'nav-link-active' : ''}`}
+              >
+                My Patients
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`nav-link ${isActive('/dashboard') ? 'nav-link-active' : ''}`}
+                >
+                  Triage Dashboard
+                </Link>
+                <Link
+                  to="/facility"
+                  className={`nav-link ${isActive('/facility') ? 'nav-link-active' : ''}`}
+                >
+                  Facility Overview
+                </Link>
+              </>
+            )}
             {user?.role === 'admin' && (
               <Link
                 to="/workers"

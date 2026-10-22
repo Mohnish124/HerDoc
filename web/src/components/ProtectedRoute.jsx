@@ -1,8 +1,9 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { homePathForRole } from '../auth/roles';
 
-export default function ProtectedRoute({ children, requiredRole }) {
+export default function ProtectedRoute({ children, roles }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
@@ -19,16 +20,17 @@ export default function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  // UI guard only: every API call is still authorized by the backend.
+  if (roles && !roles.includes(user?.role)) {
     return (
       <div className="forbidden-card">
         <div className="forbidden-icon">🔒</div>
         <h2>Access Restricted</h2>
-        <p>You do not have administrator permissions to access this management area.</p>
+        <p>Your account does not have permission to open this page.</p>
         <p className="user-role-notice">
           Your current role is: <strong>{user?.role?.toUpperCase()}</strong>
         </p>
-        <a href="/dashboard" className="btn btn-primary">Return to Triage Dashboard</a>
+        <Link to={homePathForRole(user?.role)} className="btn btn-primary">Go to my dashboard</Link>
       </div>
     );
   }

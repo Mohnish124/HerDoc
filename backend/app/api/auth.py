@@ -285,38 +285,57 @@ def register_worker(payload: WorkerRegisterRequest, admin_user: User = Depends(r
         db.close()
 
 
+def _authenticate_worker(db: Session, payload: WorkerLoginRequest, *, event: str) -> tuple[User, str, str]:
+    """Phone + PIN checks shared by the mobile and browser worker logins. Returns (user, access, refresh)."""
+    key = f"worker:{payload.phone.strip()}"
+    _reject_demo_login_in_production(phone=payload.phone)
+    user = db.query(User).filter(User.phone == payload.phone.strip()).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    _check_lockout(user)
+    if _is_rate_limited(key):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many login attempts")
+
+    if not user.pin_hash or not verify_pin(payload.pin, user.pin_hash):
+        _handle_failed_login(db, user, key=key, event=event)
+
+    # Only reveal account status to someone who already proved the PIN.
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Worker account is deactivated. Contact administrator.")
+
+    _reset_successful_login(db, user)
+    _rate_limiter.pop(key, None)
+    db.commit()
+    _log_audit(db, user.id, "successful_authentication", {"role": user.role, "event": event})
+
+    access = create_access_token(str(user.id), expires_delta=ACCESS_TOKEN_TTL)
+    refresh = create_refresh_token(str(user.id), expires_delta=REFRESH_TOKEN_TTL)
+    refresh_hash = hash_refresh_token(refresh)
+    db.add(RefreshToken(id=uuid.uuid4(), user_id=user.id, token_hash=refresh_hash, expires_at=datetime.now(timezone.utc) + REFRESH_TOKEN_TTL))
+    db.commit()
+    return user, access, refresh
+
+
 @router.post("/login/worker")
 def login_worker(payload: WorkerLoginRequest):
+    # Mobile clients keep the refresh token in device secure storage, so it is returned in the body.
     db = _get_db()
     try:
-        key = f"worker:{payload.phone.strip()}"
-        _reject_demo_login_in_production(phone=payload.phone)
-        user = db.query(User).filter(User.phone == payload.phone.strip()).first()
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-        _check_lockout(user)
-        if _is_rate_limited(key):
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many login attempts")
-
-        if not user.pin_hash or not verify_pin(payload.pin, user.pin_hash):
-            _handle_failed_login(db, user, key=key, event="worker_login")
-
-        # Only reveal account status to someone who already proved the PIN.
-        if not user.is_active:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Worker account is deactivated. Contact administrator.")
-
-        _reset_successful_login(db, user)
-        _rate_limiter.pop(key, None)
-        db.commit()
-        _log_audit(db, user.id, "successful_authentication", {"role": user.role, "event": "worker_login"})
-
-        access = create_access_token(str(user.id), expires_delta=ACCESS_TOKEN_TTL)
-        refresh = create_refresh_token(str(user.id), expires_delta=REFRESH_TOKEN_TTL)
-        refresh_hash = hash_refresh_token(refresh)
-        db.add(RefreshToken(id=uuid.uuid4(), user_id=user.id, token_hash=refresh_hash, expires_at=datetime.now(timezone.utc) + REFRESH_TOKEN_TTL))
-        db.commit()
+        user, access, refresh = _authenticate_worker(db, payload, event="worker_login")
         return {"access_token": access, "refresh_token": refresh, "token_type": "bearer", "expires_in": int(ACCESS_TOKEN_TTL.total_seconds()), "user": _user_response(user)}
+    finally:
+        db.close()
+
+
+@router.post("/login/worker/web")
+def login_worker_web(payload: WorkerLoginRequest, response: Response = None):
+    # Browser workers get the refresh token only as the httpOnly cookie, like /login/web.
+    db = _get_db()
+    try:
+        user, access, refresh = _authenticate_worker(db, payload, event="worker_web_login")
+        _set_refresh_cookie(response, refresh)
+        return {"access_token": access, "token_type": "bearer", "expires_in": int(ACCESS_TOKEN_TTL.total_seconds()), "user": _user_response(user)}
     finally:
         db.close()
 
@@ -549,6 +568,7 @@ def refresh_token(payload: RefreshRequest | None = None, request: Request = None
 @router.post("/logout")
 def logout(payload: LogoutRequest | None = None, request: Request = None, response: Response = None):
     raw_token = payload.refresh_token if payload and payload.refresh_token else None
+    from_cookie = raw_token is None
     if not raw_token and request is not None:
         raw_token = request.cookies.get(COOKIE_NAME)
 
@@ -560,9 +580,12 @@ def logout(payload: LogoutRequest | None = None, request: Request = None, respon
                 user = db.query(User).filter(User.id == uuid.UUID(claims["sub"])).first()
                 if user is not None:
                     incoming_hash = hash_refresh_token(raw_token)
+                    # A worker signing out of the web portal ends only that browser session, so the
+                    # mobile app (offline-first) keeps syncing. Every other logout revokes all sessions.
+                    revoke_all = not (from_cookie and user.role == UserRole.WORKER.value)
                     records = db.query(RefreshToken).filter(RefreshToken.user_id == user.id).all()
                     for record in records:
-                        if record.token_hash == incoming_hash or record.revoked_at is None:
+                        if record.token_hash == incoming_hash or (revoke_all and record.revoked_at is None):
                             record.revoked_at = datetime.now(timezone.utc)
                     db.commit()
                     _log_audit(db, user.id, "successful_authentication", {"role": user.role, "event": "logout"})

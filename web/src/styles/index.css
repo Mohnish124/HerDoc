@@ -1266,3 +1266,187 @@ body {
   background-color: #22c55e;
 }
 
+
+/* ---------------------------------------------------------------- Health worker portal */
+
+.role-tag-worker {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.login-method-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 1.25rem;
+  background: var(--bg-surface-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.login-method-tab {
+  border: none;
+  background: transparent;
+  padding: 0.6rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.login-method-tab-active {
+  background: var(--bg-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.emergency-notice {
+  margin: 1rem 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.9rem;
+}
+
+.emergency-notice a {
+  color: #991b1b;
+  font-weight: 800;
+}
+
+.worker-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.worker-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 1rem;
+}
+
+.worker-patient-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.worker-patient-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-left: 5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.worker-patient-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.worker-patient-card-red {
+  border-left-color: var(--color-danger);
+}
+
+.worker-patient-card-yellow {
+  border-left-color: var(--color-warning);
+}
+
+.worker-patient-card-green {
+  border-left-color: var(--color-success);
+}
+
+.worker-patient-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.worker-patient-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.worker-patient-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0 0;
+}
+
+.risk-badge-none {
+  background-color: var(--bg-surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.worker-risk-result {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.worker-risk-result-red {
+  background: var(--color-danger-bg);
+  border-color: #fecaca;
+}
+
+.worker-risk-result-yellow {
+  background: var(--color-warning-bg);
+  border-color: #fde68a;
+}
+
+.worker-risk-result-green {
+  background: var(--color-success-bg);
+  border-color: #bbf7d0;
+}
+
+.review-notes-full {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  color: var(--text-primary);
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .worker-patient-card,
+  .worker-patient-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .worker-patient-status {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
