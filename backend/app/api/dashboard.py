@@ -4,10 +4,11 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_role
+from app.api.scope import require_user_facility, resolve_facility_filter
 from app.db.models import Facility, Patient, Review, RiskFlag, User, Visit
 from app.db.session import get_session_local
 
@@ -27,16 +28,8 @@ def get_flagged_patients(
 ):
     db = _get_db()
     try:
-        # Enforce facility scope
-        effective_facility_id = facility_id
-        if current_user.role == "doctor":
-            if current_user.facility_id is not None:
-                if facility_id is not None and facility_id != current_user.facility_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="Doctors can only access patients within their own assigned facility",
-                    )
-                effective_facility_id = current_user.facility_id
+        # Enforce facility scope (doctors and admins alike)
+        effective_facility_id = resolve_facility_filter(current_user, facility_id)
 
         # Query all patients within facility / worker scope
         query = db.query(Patient).join(User, Patient.worker_id == User.id)
@@ -165,16 +158,8 @@ def get_facility_overview(
 ):
     db = _get_db()
     try:
-        # Enforce facility scope
-        target_facility_id = facility_id
-        if current_user.role == "doctor":
-            if current_user.facility_id is not None:
-                if facility_id is not None and facility_id != current_user.facility_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="Doctors can only access their own facility overview",
-                    )
-                target_facility_id = current_user.facility_id
+        # Enforce facility scope (doctors and admins alike)
+        target_facility_id = resolve_facility_filter(current_user, facility_id)
 
         # Query facility info if specified
         facility_name = "All Facilities"
@@ -252,9 +237,9 @@ def get_dashboard_filters(current_user: User = Depends(require_role("doctor", "a
         facilities_query = db.query(Facility)
         workers_query = db.query(User).filter(User.role == "worker")
 
-        if current_user.role == "doctor" and current_user.facility_id is not None:
-            facilities_query = facilities_query.filter(Facility.id == current_user.facility_id)
-            workers_query = workers_query.filter(User.facility_id == current_user.facility_id)
+        own_facility_id = require_user_facility(current_user)
+        facilities_query = facilities_query.filter(Facility.id == own_facility_id)
+        workers_query = workers_query.filter(User.facility_id == own_facility_id)
 
         facilities = facilities_query.all()
         workers = workers_query.all()

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_role
+from app.api.scope import ensure_patient_in_scope, require_user_facility
 from app.db.models import Patient, User
 from app.db.session import get_session_local
 
@@ -80,16 +81,14 @@ def list_patients(current_user: User = Depends(require_role("worker", "doctor", 
         if current_user.role == "worker":
             patients = db.query(Patient).filter(Patient.worker_id == current_user.id).order_by(Patient.created_at.desc()).all()
         else:
-            if current_user.facility_id is not None:
-                patients = (
-                    db.query(Patient)
-                    .join(User, Patient.worker_id == User.id)
-                    .filter(User.facility_id == current_user.facility_id)
-                    .order_by(Patient.created_at.desc())
-                    .all()
-                )
-            else:
-                patients = db.query(Patient).order_by(Patient.created_at.desc()).all()
+            facility_id = require_user_facility(current_user)
+            patients = (
+                db.query(Patient)
+                .join(User, Patient.worker_id == User.id)
+                .filter(User.facility_id == facility_id)
+                .order_by(Patient.created_at.desc())
+                .all()
+            )
         return [_serialize_patient(patient) for patient in patients]
     finally:
         db.close()
@@ -138,21 +137,8 @@ def get_patient(patient_id: uuid.UUID, current_user: User = Depends(require_role
         if patient is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
 
-        # Guard against IDOR: worker can only access own patients
-        if current_user.role == "worker":
-            if patient.worker_id != current_user.id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="This patient belongs to another worker",
-                )
-        # Doctor can only access patients within their assigned facility
-        elif current_user.role == "doctor" and current_user.facility_id is not None:
-            worker = patient.worker
-            if worker and worker.facility_id != current_user.facility_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="This patient is outside your assigned facility",
-                )
+        # Guard against IDOR: workers see own patients, doctors/admins their facility only
+        ensure_patient_in_scope(db, patient, current_user)
 
         worker = patient.worker
         res = _serialize_patient(patient)

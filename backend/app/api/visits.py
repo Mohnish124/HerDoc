@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_role
+from app.api.scope import ensure_patient_in_scope
 from app.db.models import Patient, RiskFlag, RiskLevel, User, Visit
 from app.db.session import get_session_local
 
@@ -120,23 +121,6 @@ def _serialize_visit(visit: Visit) -> dict:
     }
 
 
-def _enforce_patient_scope(db: Session, patient: Patient, current_user: User) -> None:
-    if current_user.role == "worker":
-        if patient.worker_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This patient belongs to another worker",
-            )
-    else:
-        if current_user.facility_id is not None and patient.worker_id is not None:
-            worker = db.query(User).filter(User.id == patient.worker_id).first()
-            if worker is None or worker.facility_id != current_user.facility_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="This patient is outside your facility",
-                )
-
-
 @router.get("/patients/{patient_id}/visits")
 def list_patient_visits(
     patient_id: uuid.UUID,
@@ -148,7 +132,7 @@ def list_patient_visits(
         if patient is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
 
-        _enforce_patient_scope(db, patient, current_user)
+        ensure_patient_in_scope(db, patient, current_user)
 
         visits = (
             db.query(Visit)

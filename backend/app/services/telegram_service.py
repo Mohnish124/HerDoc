@@ -13,6 +13,9 @@ import httpx
 from app.config import get_settings
 
 LOGGER = logging.getLogger(__name__)
+# httpx logs every request URL at INFO, and Telegram URLs embed the bot token.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 TELEGRAM_API_BASE = "https://api.telegram.org"
 TELEGRAM_TIMEOUT_SECONDS = 10.0

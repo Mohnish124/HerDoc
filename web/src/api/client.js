@@ -5,7 +5,11 @@
  * - 401 Interceptor: Catches 401 -> calls /api/auth/refresh -> retries original request once.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Production builds default to '' (same origin): the static host proxies /api/* to the backend,
+// so the httpOnly refresh cookie stays first-party. Local dev falls back to the API on :8000.
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '')
+).replace(/\/+$/, '');
 
 let inMemoryAccessToken = null;
 let isRefreshing = false;

@@ -309,6 +309,10 @@ def sync_batch(payload: SyncBatchRequest, current_user: User = Depends(require_r
                     db.add(existing)
                     patient_results.success += 1
                 else:
+                    # A client-chosen UUID must never take over another worker's patient.
+                    if existing.worker_id != current_user.id:
+                        patient_results.failed += 1
+                        continue
                     if _record_is_same_patient(existing, patient):
                         patient_results.already_synced += 1
                     else:
@@ -396,6 +400,11 @@ def sync_batch(payload: SyncBatchRequest, current_user: User = Depends(require_r
                     db.add(existing)
                     risk_results.success += 1
                 else:
+                    # Never move a flag off another worker's visit.
+                    flag_owner_visit = known_visits.get(str(existing.visit_id)) or db.get(Visit, existing.visit_id)
+                    if flag_owner_visit is None or flag_owner_visit.worker_id != current_user.id:
+                        risk_results.failed += 1
+                        continue
                     if _record_is_same_risk_flag(existing, flag):
                         risk_results.already_synced += 1
                     else:

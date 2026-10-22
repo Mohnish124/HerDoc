@@ -10,6 +10,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
+from app.api.scope import require_user_facility
+from app.config import get_settings
 from app.db.models import AuditLog, RefreshToken, User, UserRole
 from app.db.session import get_session_local
 from app.services.auth_service import (
@@ -22,6 +24,7 @@ from app.services.auth_service import (
     verify_refresh_token,
     verify_refresh_token_hash,
 )
+from app.services.demo_accounts import is_demo_identity
 from app.services.tokens import create_access_token, create_refresh_token
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -94,16 +97,23 @@ class LogoutRequest(BaseModel):
 COOKIE_NAME = "herdoc_refresh_token"
 
 
+# The web portal reaches the API on its own origin (same-origin proxy), so the
+# refresh cookie never needs to travel cross-site: SameSite=Strict blocks CSRF on
+# /refresh and /logout. Secure is on in production (see Settings.cookie_secure).
+COOKIE_SAMESITE = "strict"
+COOKIE_PATH = "/api/auth"
+
+
 def _set_refresh_cookie(response: Response | None, refresh_token_str: str) -> None:
     if response is not None:
         response.set_cookie(
             key=COOKIE_NAME,
             value=refresh_token_str,
             httponly=True,
-            secure=False,
-            samesite="lax",
+            secure=get_settings().cookie_secure,
+            samesite=COOKIE_SAMESITE,
             max_age=int(REFRESH_TOKEN_TTL.total_seconds()),
-            path="/api/auth",
+            path=COOKIE_PATH,
         )
 
 
@@ -111,9 +121,10 @@ def _clear_refresh_cookie(response: Response | None) -> None:
     if response is not None:
         response.delete_cookie(
             key=COOKIE_NAME,
-            path="/api/auth",
+            path=COOKIE_PATH,
             httponly=True,
-            samesite="lax",
+            secure=get_settings().cookie_secure,
+            samesite=COOKIE_SAMESITE,
         )
 
 
@@ -151,9 +162,25 @@ def _remember_attempt(key: str) -> None:
 
 def _is_rate_limited(key: str) -> bool:
     now = time.time()
-    bucket = _rate_limiter.setdefault(key, [])
+    bucket = _rate_limiter.get(key)
+    if not bucket:
+        return False
     bucket[:] = [ts for ts in bucket if now - ts < LOGIN_RATE_LIMIT_SECONDS]
+    if not bucket:
+        _rate_limiter.pop(key, None)
+        return False
     return len(bucket) >= LOGIN_RATE_LIMIT_MAX
+
+
+def _reject_demo_login_in_production(*, email: str | None = None, phone: str | None = None) -> None:
+    # Seeded demo accounts have published credentials; they must never work in production.
+    if get_settings().is_production and is_demo_identity(email=email, phone=phone):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+
+def _reject_inactive_login(user: User) -> None:
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated. Contact administrator.")
 
 
 def _check_lockout(user: User) -> None:
@@ -224,6 +251,7 @@ def require_worker() -> Any:
 
 @router.post("/register/worker")
 def register_worker(payload: WorkerRegisterRequest, admin_user: User = Depends(require_admin())):
+    facility_id = require_user_facility(admin_user)
     db = _get_db()
     try:
         normalized_phone = payload.phone.strip()
@@ -243,7 +271,7 @@ def register_worker(payload: WorkerRegisterRequest, admin_user: User = Depends(r
             email=None,
             password_hash=None,
             pin_hash=pin_hash,
-            facility_id=admin_user.facility_id,
+            facility_id=facility_id,
             is_active=True,
             failed_login_attempts=0,
             locked_until=None,
@@ -262,14 +290,10 @@ def login_worker(payload: WorkerLoginRequest):
     db = _get_db()
     try:
         key = f"worker:{payload.phone.strip()}"
+        _reject_demo_login_in_production(phone=payload.phone)
         user = db.query(User).filter(User.phone == payload.phone.strip()).first()
         if user is None:
-            _remember_attempt(key)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-        if not user.is_active:
-            _remember_attempt(key)
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Worker account is deactivated. Contact administrator.")
 
         _check_lockout(user)
         if _is_rate_limited(key):
@@ -277,6 +301,10 @@ def login_worker(payload: WorkerLoginRequest):
 
         if not user.pin_hash or not verify_pin(payload.pin, user.pin_hash):
             _handle_failed_login(db, user, key=key, event="worker_login")
+
+        # Only reveal account status to someone who already proved the PIN.
+        if not user.is_active:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Worker account is deactivated. Contact administrator.")
 
         _reset_successful_login(db, user)
         _rate_limiter.pop(key, None)
@@ -295,6 +323,7 @@ def login_worker(payload: WorkerLoginRequest):
 
 @router.post("/register/doctor")
 def register_doctor(payload: DoctorRegisterRequest, admin_user: User = Depends(require_admin())):
+    facility_id = require_user_facility(admin_user)
     db = _get_db()
     try:
         if db.query(User).filter(User.email == payload.email).first():
@@ -312,7 +341,7 @@ def register_doctor(payload: DoctorRegisterRequest, admin_user: User = Depends(r
             email=str(payload.email),
             password_hash=password_hash,
             pin_hash=None,
-            facility_id=admin_user.facility_id,
+            facility_id=facility_id,
             is_active=True,
             failed_login_attempts=0,
             locked_until=None,
@@ -331,9 +360,9 @@ def login_doctor(payload: DoctorLoginRequest, response: Response = None):
     db = _get_db()
     try:
         key = f"doctor:{payload.email}"
+        _reject_demo_login_in_production(email=payload.email)
         user = db.query(User).filter(User.email == str(payload.email)).first()
         if user is None:
-            _remember_attempt(key)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         _check_lockout(user)
@@ -343,6 +372,7 @@ def login_doctor(payload: DoctorLoginRequest, response: Response = None):
         if not user.password_hash or not verify_password(payload.password, user.password_hash):
             _handle_failed_login(db, user, key=key, event="doctor_login")
 
+        _reject_inactive_login(user)
         _reset_successful_login(db, user)
         _rate_limiter.pop(key, None)
         db.commit()
@@ -360,7 +390,10 @@ def login_doctor(payload: DoctorLoginRequest, response: Response = None):
 
 
 @router.post("/register/admin")
-def register_admin(payload: AdminRegisterRequest):
+def register_admin(payload: AdminRegisterRequest, admin_user: User = Depends(require_admin())):
+    # Only an existing admin can create another admin, in the creator's own facility.
+    # The very first admin is created offline with `python -m app.bootstrap_admin`.
+    facility_id = require_user_facility(admin_user)
     db = _get_db()
     try:
         if db.query(User).filter(User.email == str(payload.email)).first():
@@ -378,14 +411,14 @@ def register_admin(payload: AdminRegisterRequest):
             email=str(payload.email),
             password_hash=password_hash,
             pin_hash=None,
-            facility_id=None,
+            facility_id=facility_id,
             is_active=True,
             failed_login_attempts=0,
             locked_until=None,
         )
         db.add(user)
         db.flush()
-        _log_audit(db, user.id, "role.account_change", {"target_role": "admin", "target_user_id": str(user.id)})
+        _log_audit(db, admin_user.id, "role.account_change", {"target_role": "admin", "target_user_id": str(user.id)})
         db.commit()
         return {"message": "Admin registered", "user": _user_response(user)}
     finally:
@@ -397,9 +430,9 @@ def login_admin(payload: AdminLoginRequest, response: Response = None):
     db = _get_db()
     try:
         key = f"admin:{payload.email}"
+        _reject_demo_login_in_production(email=payload.email)
         user = db.query(User).filter(User.email == str(payload.email)).first()
         if user is None:
-            _remember_attempt(key)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         _check_lockout(user)
@@ -409,6 +442,7 @@ def login_admin(payload: AdminLoginRequest, response: Response = None):
         if not user.password_hash or not verify_password(payload.password, user.password_hash):
             _handle_failed_login(db, user, key=key, event="admin_login")
 
+        _reject_inactive_login(user)
         _reset_successful_login(db, user)
         _rate_limiter.pop(key, None)
         db.commit()
@@ -430,9 +464,9 @@ def login_web(payload: DoctorLoginRequest, response: Response = None):
     db = _get_db()
     try:
         key = f"web:{payload.email}"
+        _reject_demo_login_in_production(email=payload.email)
         user = db.query(User).filter(User.email == str(payload.email)).first()
         if user is None or user.role not in {UserRole.DOCTOR.value, UserRole.ADMIN.value}:
-            _remember_attempt(key)
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         _check_lockout(user)
@@ -442,6 +476,7 @@ def login_web(payload: DoctorLoginRequest, response: Response = None):
         if not user.password_hash or not verify_password(payload.password, user.password_hash):
             _handle_failed_login(db, user, key=key, event="web_login")
 
+        _reject_inactive_login(user)
         _reset_successful_login(db, user)
         _rate_limiter.pop(key, None)
         db.commit()
@@ -453,7 +488,8 @@ def login_web(payload: DoctorLoginRequest, response: Response = None):
         db.add(RefreshToken(id=uuid.uuid4(), user_id=user.id, token_hash=refresh_hash, expires_at=datetime.now(timezone.utc) + REFRESH_TOKEN_TTL))
         db.commit()
         _set_refresh_cookie(response, refresh)
-        return {"access_token": access, "refresh_token": refresh, "token_type": "bearer", "expires_in": int(ACCESS_TOKEN_TTL.total_seconds()), "user": _user_response(user)}
+        # Browser clients get the refresh token only as an httpOnly cookie, never in JS-readable JSON.
+        return {"access_token": access, "token_type": "bearer", "expires_in": int(ACCESS_TOKEN_TTL.total_seconds()), "user": _user_response(user)}
     finally:
         db.close()
 
@@ -461,6 +497,9 @@ def login_web(payload: DoctorLoginRequest, response: Response = None):
 @router.post("/refresh")
 def refresh_token(payload: RefreshRequest | None = None, request: Request = None, response: Response = None):
     raw_token = payload.refresh_token if payload and payload.refresh_token else None
+    # Mobile sends the token in the body and gets it back in the body; the web portal
+    # uses the httpOnly cookie, so its rotated token must not appear in readable JSON.
+    from_body = raw_token is not None
     if not raw_token and request is not None:
         raw_token = request.cookies.get(COOKIE_NAME)
 
@@ -475,7 +514,7 @@ def refresh_token(payload: RefreshRequest | None = None, request: Request = None
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token") from exc
 
         user = db.query(User).filter(User.id == uuid.UUID(claims["sub"])).first()
-        if user is None:
+        if user is None or not user.is_active:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
         incoming_hash = hash_refresh_token(raw_token)
@@ -492,14 +531,17 @@ def refresh_token(payload: RefreshRequest | None = None, request: Request = None
         _log_audit(db, user.id, "successful_authentication", {"role": user.role, "event": "refresh"})
         db.commit()
         access = create_access_token(str(user.id), expires_delta=ACCESS_TOKEN_TTL)
-        _set_refresh_cookie(response, new_refresh)
-        return {
+        result = {
             "access_token": access,
-            "refresh_token": new_refresh,
             "token_type": "bearer",
             "expires_in": int(ACCESS_TOKEN_TTL.total_seconds()),
             "user": _user_response(user),
         }
+        if from_body:
+            result["refresh_token"] = new_refresh
+        else:
+            _set_refresh_cookie(response, new_refresh)
+        return result
     finally:
         db.close()
 

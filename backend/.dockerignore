@@ -11,3 +11,6 @@ test.db
 tests/
 ml/data/
 ml/exported/*.joblib
+
+# Render copies secret files (e.g. a database CA certificate) into the build context root.
+*.pem

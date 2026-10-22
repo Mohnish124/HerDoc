@@ -4,6 +4,11 @@ import { API_BASE_URL } from '../config';
 import { getStoredTokens, refreshWorkerAccessToken } from './auth';
 
 const LOCATION_TIMEOUT_MS = 8000;
+// Upper bound on waiting for the server so the worker is told to call directly instead of
+// watching a spinner (e.g. while a sleeping free-tier server starts up).
+const SOS_REQUEST_TIMEOUT_MS = 30000;
+const SOS_UNCONFIRMED_MESSAGE =
+  'The server did not confirm the alert, so it may not have been delivered. Please call emergency services directly.';
 
 function withTimeout(promise, ms) {
   return new Promise((resolve, reject) => {
@@ -75,12 +80,15 @@ export async function sendEmergencySOS({ coordinates } = {}) {
 
   let response;
   try {
-    response = await postEmergency(accessToken, body);
+    response = await withTimeout(postEmergency(accessToken, body), SOS_REQUEST_TIMEOUT_MS);
     if (response.status === 401) {
       accessToken = await refreshWorkerAccessToken();
-      response = await postEmergency(accessToken, body);
+      response = await withTimeout(postEmergency(accessToken, body), SOS_REQUEST_TIMEOUT_MS);
     }
   } catch (error) {
+    if (error?.message === 'timeout') {
+      throw new Error(SOS_UNCONFIRMED_MESSAGE);
+    }
     throw new Error('No connection to the server. Please call emergency services directly.');
   }
 
@@ -90,6 +98,10 @@ export async function sendEmergencySOS({ coordinates } = {}) {
     throw new Error(
       typeof detail === 'string' ? detail : 'Emergency alert failed. Please call emergency services directly.',
     );
+  }
+  // Only report success when the backend confirms Telegram accepted the alert.
+  if (payload?.status !== 'sent') {
+    throw new Error(SOS_UNCONFIRMED_MESSAGE);
   }
   return payload;
 }

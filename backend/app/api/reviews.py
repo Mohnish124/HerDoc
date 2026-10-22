@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_role
+from app.api.scope import ensure_patient_in_scope
 from app.db.models import AuditLog, Patient, Review, ReviewStatus, User
 from app.db.session import get_session_local
 
@@ -60,14 +61,8 @@ def create_or_update_review(
         if patient is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
 
-        # Doctors can only review patients within their assigned facility
-        if current_user.role == "doctor" and current_user.facility_id is not None:
-            worker = patient.worker
-            if worker and worker.facility_id != current_user.facility_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Doctors can only review patients within their own facility",
-                )
+        # Doctors and admins can only review patients within their own facility
+        ensure_patient_in_scope(db, patient, current_user)
 
         now = datetime.now(timezone.utc)
         effective_reviewed_at = now if payload.status != ReviewStatus.PENDING.value else None

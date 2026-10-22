@@ -74,12 +74,14 @@ def test_worker_register_login_refresh_logout_flow(demo_admin_token):
     assert logout.status_code == 200, logout.text
 
 
-def test_admin_register_login_refresh_logout_flow():
+def test_admin_register_login_refresh_logout_flow(demo_admin_token):
     email = _unique_email("admin")
     password = "StrongAdmin!2024"
 
+    # Admin registration requires an existing admin (see test_security_hardening.py).
     register = client.post(
         "/api/auth/register/admin",
+        headers={"Authorization": f"Bearer {demo_admin_token}"},
         json={"name": "New Admin", "email": email, "password": password},
     )
     assert register.status_code == 200, register.text

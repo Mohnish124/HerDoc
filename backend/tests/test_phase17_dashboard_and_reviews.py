@@ -358,14 +358,23 @@ def test_admin_filtering_across_facilities(multi_facility_data):
     )
     headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
 
-    # Admin filtering by Facility 2
-    f2_flagged = client.get(f"/api/dashboard/flagged?facility_id={data['f2_id']}", headers=headers)
-    assert f2_flagged.status_code == 200
-    f2_list = f2_flagged.json()
-    assert len(f2_list) >= 1
-    assert any(p["id"] == data["p3_id"] for p in f2_list)
+    # Admins are scoped to their own facility (Facility 1), like doctors.
+    f1_flagged = client.get(f"/api/dashboard/flagged?facility_id={data['f1_id']}", headers=headers)
+    assert f1_flagged.status_code == 200
+    f1_ids = {p["id"] for p in f1_flagged.json()}
+    assert {data["p1_id"], data["p2_id"]} <= f1_ids
+    assert data["p3_id"] not in f1_ids
 
-    # Admin filtering by Worker 1
+    # Admin filtering by Facility 2 is forbidden
+    f2_flagged = client.get(f"/api/dashboard/flagged?facility_id={data['f2_id']}", headers=headers)
+    assert f2_flagged.status_code == 403
+
+    # Admin filtering by Worker 1 (own facility)
     w1_flagged = client.get(f"/api/dashboard/flagged?worker_id={data['w1_id']}", headers=headers)
     assert w1_flagged.status_code == 200
     assert len(w1_flagged.json()) >= 2
+
+    # Filtering by a Facility 2 worker cannot reach Facility 2 patients
+    w2_flagged = client.get(f"/api/dashboard/flagged?worker_id={data['w2_id']}", headers=headers)
+    assert w2_flagged.status_code == 200
+    assert data["p3_id"] not in {p["id"] for p in w2_flagged.json()}

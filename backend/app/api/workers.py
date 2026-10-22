@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.auth import require_admin
+from app.api.scope import require_user_facility, resolve_facility_filter
 from app.db.models import AuditLog, Facility, Patient, RefreshToken, User, UserRole, Visit
 from app.db.session import get_session_local
 
@@ -30,10 +31,8 @@ def list_workers(
 ):
     db = _get_db()
     try:
-        # Determine facility scope
-        target_facility_id = facility_id
-        if current_admin.facility_id is not None:
-            target_facility_id = current_admin.facility_id
+        # Admins only manage workers in their own facility
+        target_facility_id = resolve_facility_filter(current_admin, facility_id)
 
         query = db.query(User).filter(User.role == UserRole.WORKER.value)
         if target_facility_id is not None:
@@ -101,7 +100,7 @@ def update_worker_status(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Field worker not found")
 
         # Check facility scope
-        if current_admin.facility_id is not None and worker.facility_id != current_admin.facility_id:
+        if worker.facility_id != require_user_facility(current_admin):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Cannot modify workers outside your assigned facility",
