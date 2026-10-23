@@ -1450,3 +1450,122 @@ body {
     text-align: left;
   }
 }
+
+/* ---------------------------------------------------------------- Regional languages (worker views) */
+
+.language-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.language-select select {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  min-height: 36px;
+}
+
+.language-select-login {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.5rem 0 1rem;
+}
+
+/* Devanagari (Marathi, Hindi): system fonts that cover the script, taller lines for matras,
+   and no letter-spacing or forced uppercase, which can break conjuncts. */
+:is([lang='mr'], [lang='hi']) {
+  font-family: var(--font-family), 'Noto Sans Devanagari', 'Nirmala UI', 'Mangal', sans-serif;
+  line-height: 1.6;
+}
+
+:is([lang='mr'], [lang='hi']) * {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Longer translated labels wrap instead of overflowing. */
+.login-method-tab,
+.navbar-worker .btn-logout,
+.worker-form .btn,
+.page-header-actions .btn,
+.page-header-actions .btn-refresh {
+  white-space: normal;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.worker-patient-main,
+.worker-patient-status,
+.page-header > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Shared navigation bar (all roles): one row when it fits, extra rows when it does not,
+   so links, identity and sign-out stay visible instead of widening the page. */
+.navbar-content,
+.navbar-left,
+.navbar-nav,
+.navbar-right {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+
+.navbar-left {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .navbar-content {
+    gap: 0.5rem 1rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .navbar-left {
+    gap: 0.5rem 1rem;
+  }
+
+  .navbar-nav {
+    width: 100%;
+    gap: 0.25rem 0.5rem;
+  }
+
+  /* Touch targets of at least 44px. */
+  .nav-link,
+  .btn-logout,
+  .language-select select {
+    min-height: 44px;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .navbar-right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .navbar-worker .language-select-label {
+    display: none;
+  }
+
+  .page-header-actions {
+    width: 100%;
+  }
+
+  .page-header-actions > * {
+    flex: 1 1 auto;
+  }
+}

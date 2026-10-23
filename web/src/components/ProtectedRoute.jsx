@@ -17,7 +17,9 @@ export default function ProtectedRoute({ children, roles }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Worker-only pages send signed-out users (sign-out, expired session, shared link) to the phone + PIN sign-in.
+    const loginPath = roles && roles.length === 1 && roles[0] === 'worker' ? '/login?as=worker' : '/login';
+    return <Navigate to={loginPath} state={{ from: location }} replace />;
   }
 
   // UI guard only: every API call is still authorized by the backend.

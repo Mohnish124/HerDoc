@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "check:risk": "node scripts/check-risk-parity.mjs"
+    "check:risk": "node scripts/check-risk-parity.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

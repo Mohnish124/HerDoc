@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { API_BASE_URL, apiFetch, setAccessToken, silentRefreshToken } from '../api/client';
 
-const AuthContext = createContext(null);
+// Exported for rendering checks (scripts/check-i18n.mjs); app code uses AuthProvider/useAuth.
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

@@ -40,17 +40,18 @@ export function classifyVisit({ patientAge, vitals, priorVisits, now }) {
 }
 
 // Same field limits as the mobile visit form (NewVisitScreen validate()).
+// Returns a translation key (see src/i18n/locales) or '' when valid.
 export function validateVitals(form) {
   const sys = Number(form.systolic_bp);
-  if (!Number.isFinite(sys) || sys < 50 || sys > 260) return 'Systolic BP must be between 50 and 260 mmHg.';
+  if (!Number.isFinite(sys) || sys < 50 || sys > 260) return 'vitals.errors.systolic';
   const dia = Number(form.diastolic_bp);
-  if (!Number.isFinite(dia) || dia < 30 || dia > 180) return 'Diastolic BP must be between 30 and 180 mmHg.';
-  if (dia >= sys) return 'Diastolic BP must be lower than Systolic BP.';
+  if (!Number.isFinite(dia) || dia < 30 || dia > 180) return 'vitals.errors.diastolic';
+  if (dia >= sys) return 'vitals.errors.diastolicBelowSystolic';
   const bs = Number(form.blood_sugar);
-  if (!Number.isFinite(bs) || bs < 20 || bs > 500) return 'Blood sugar must be a valid number between 20 and 500 mg/dL.';
+  if (!Number.isFinite(bs) || bs < 20 || bs > 500) return 'vitals.errors.sugar';
   const temp = Number(form.body_temp_c);
-  if (!Number.isFinite(temp) || temp < 30.0 || temp > 45.0) return 'Body temperature must be between 30.0 and 45.0 °C.';
+  if (!Number.isFinite(temp) || temp < 30.0 || temp > 45.0) return 'vitals.errors.temp';
   const hr = Number(form.heart_rate);
-  if (!Number.isFinite(hr) || hr < 30 || hr > 220) return 'Heart rate must be between 30 and 220 bpm.';
+  if (!Number.isFinite(hr) || hr < 30 || hr > 220) return 'vitals.errors.heartRate';
   return '';
 }

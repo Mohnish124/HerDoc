@@ -5,13 +5,6 @@
  */
 import { apiFetch } from './client';
 
-// Same display text as the mobile risk engine (mobile/app/services/trend_engine.js ACTION_MAP).
-export const RISK_ACTIONS = {
-  green: 'Continue routine care',
-  yellow: 'Recheck in 1 week',
-  red: 'Refer to PHC within 24 hours',
-};
-
 // Client-generated UUIDs are the app's ID convention (the mobile app creates them offline too).
 export function newId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -22,15 +15,20 @@ export function newId() {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+// Errors keep the server's message separate so the UI can show it in the worker's language
+// (see src/i18n/errors.js).
 async function readJson(res, fallback) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const detail = data?.detail;
+    const error = new Error(typeof detail === 'string' ? detail : fallback);
     if (Array.isArray(detail)) {
       // Validation errors: report field + message only (FastAPI echoes submitted values in "input").
-      throw new Error(detail.map((e) => `${(e.loc || []).slice(1).join('.')}: ${e.msg}`).join('; '));
+      error.validation = detail.map((e) => `${(e.loc || []).slice(1).join('.')}: ${e.msg}`).join('; ');
+    } else if (typeof detail === 'string') {
+      error.detail = detail;
     }
-    throw new Error(typeof detail === 'string' ? detail : fallback);
+    throw error;
   }
   return data;
 }
