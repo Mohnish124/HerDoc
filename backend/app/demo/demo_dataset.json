@@ -1,0 +1,864 @@
+{
+  "description": "Synthetic HerDoc demo data. Fictional workers, patients and readings; not real clinical records.",
+  "generator": "web/scripts/build-demo-dataset.mjs (risk results from the real HerDoc risk model and trend engine)",
+  "visit_days_ago": [
+    84,
+    56,
+    28,
+    7
+  ],
+  "workers": [
+    {
+      "key": "worker-1",
+      "name": "Demo Worker 1",
+      "phone": "9000000006"
+    },
+    {
+      "key": "worker-2",
+      "name": "Demo Worker 2",
+      "phone": "9000000007"
+    },
+    {
+      "key": "worker-3",
+      "name": "Demo Worker 3",
+      "phone": "9000000008"
+    },
+    {
+      "key": "worker-4",
+      "name": "Demo Worker 4",
+      "phone": "9000000009"
+    },
+    {
+      "key": "worker-5",
+      "name": "Demo Worker 5",
+      "phone": "9000000010"
+    }
+  ],
+  "patients": [
+    {
+      "key": "worker-1-patient-1",
+      "worker_key": "worker-1",
+      "name": "Demo Patient 1-1",
+      "age": 23,
+      "village": "Demo Village A",
+      "edd_days_ahead": 67,
+      "pattern": "routine",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 99,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 71,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 99,
+          "diastolic_bp": 66,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 102,
+          "diastolic_bp": 63,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 66,
+          "blood_sugar": 87,
+          "body_temp_c": 36.8,
+          "heart_rate": 70,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-1-patient-2",
+      "worker_key": "worker-1",
+      "name": "Demo Patient 1-2",
+      "age": 25,
+      "village": "Demo Village B",
+      "edd_days_ahead": 87,
+      "pattern": "rising-bp",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 104,
+          "diastolic_bp": 68,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 76,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 113,
+          "diastolic_bp": 74,
+          "blood_sugar": 90,
+          "body_temp_c": 36.8,
+          "heart_rate": 78,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 122,
+          "diastolic_bp": 80,
+          "blood_sugar": 92,
+          "body_temp_c": 36.9,
+          "heart_rate": 80,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": "Blood pressure has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 131,
+          "diastolic_bp": 86,
+          "blood_sugar": 94,
+          "body_temp_c": 36.9,
+          "heart_rate": 82,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood pressure has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-1-patient-3",
+      "worker_key": "worker-1",
+      "name": "Demo Patient 1-3",
+      "age": 28,
+      "village": "Demo Village C",
+      "edd_days_ahead": 107,
+      "pattern": "high-risk",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 138,
+          "diastolic_bp": 90,
+          "blood_sugar": 120,
+          "body_temp_c": 37,
+          "heart_rate": 88,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 146,
+          "diastolic_bp": 94,
+          "blood_sugar": 140,
+          "body_temp_c": 37.1,
+          "heart_rate": 92,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 152,
+          "diastolic_bp": 98,
+          "blood_sugar": 165,
+          "body_temp_c": 37.2,
+          "heart_rate": 96,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 158,
+          "diastolic_bp": 102,
+          "blood_sugar": 180,
+          "body_temp_c": 37.3,
+          "heart_rate": 100,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-2-patient-1",
+      "worker_key": "worker-2",
+      "name": "Demo Patient 2-1",
+      "age": 24,
+      "village": "Demo Village A",
+      "edd_days_ahead": 74,
+      "pattern": "routine",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 100,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 72,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 100,
+          "diastolic_bp": 66,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 102,
+          "diastolic_bp": 64,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 66,
+          "blood_sugar": 86,
+          "body_temp_c": 36.8,
+          "heart_rate": 70,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-2-patient-2",
+      "worker_key": "worker-2",
+      "name": "Demo Patient 2-2",
+      "age": 27,
+      "village": "Demo Village B",
+      "edd_days_ahead": 94,
+      "pattern": "recheck",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 70,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 82,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 104,
+          "body_temp_c": 36.6,
+          "heart_rate": 78,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-2-patient-3",
+      "worker_key": "worker-2",
+      "name": "Demo Patient 2-3",
+      "age": 29,
+      "village": "Demo Village C",
+      "edd_days_ahead": 114,
+      "pattern": "high-risk",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 138,
+          "diastolic_bp": 90,
+          "blood_sugar": 120,
+          "body_temp_c": 37,
+          "heart_rate": 88,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 146,
+          "diastolic_bp": 94,
+          "blood_sugar": 140,
+          "body_temp_c": 37.1,
+          "heart_rate": 92,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 152,
+          "diastolic_bp": 98,
+          "blood_sugar": 165,
+          "body_temp_c": 37.2,
+          "heart_rate": 96,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 158,
+          "diastolic_bp": 102,
+          "blood_sugar": 180,
+          "body_temp_c": 37.3,
+          "heart_rate": 100,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-3-patient-1",
+      "worker_key": "worker-3",
+      "name": "Demo Patient 3-1",
+      "age": 25,
+      "village": "Demo Village A",
+      "edd_days_ahead": 81,
+      "pattern": "routine",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 101,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 73,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 101,
+          "diastolic_bp": 66,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 102,
+          "diastolic_bp": 65,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 66,
+          "blood_sugar": 85,
+          "body_temp_c": 36.8,
+          "heart_rate": 70,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-3-patient-2",
+      "worker_key": "worker-3",
+      "name": "Demo Patient 3-2",
+      "age": 27,
+      "village": "Demo Village B",
+      "edd_days_ahead": 101,
+      "pattern": "rising-bp",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 104,
+          "diastolic_bp": 68,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 76,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 113,
+          "diastolic_bp": 74,
+          "blood_sugar": 90,
+          "body_temp_c": 36.8,
+          "heart_rate": 78,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 122,
+          "diastolic_bp": 80,
+          "blood_sugar": 92,
+          "body_temp_c": 36.9,
+          "heart_rate": 80,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": "Blood pressure has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 131,
+          "diastolic_bp": 86,
+          "blood_sugar": 94,
+          "body_temp_c": 36.9,
+          "heart_rate": 82,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood pressure has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-3-patient-3",
+      "worker_key": "worker-3",
+      "name": "Demo Patient 3-3",
+      "age": 30,
+      "village": "Demo Village C",
+      "edd_days_ahead": 121,
+      "pattern": "high-risk",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 138,
+          "diastolic_bp": 90,
+          "blood_sugar": 120,
+          "body_temp_c": 37,
+          "heart_rate": 88,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 146,
+          "diastolic_bp": 94,
+          "blood_sugar": 140,
+          "body_temp_c": 37.1,
+          "heart_rate": 92,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 152,
+          "diastolic_bp": 98,
+          "blood_sugar": 165,
+          "body_temp_c": 37.2,
+          "heart_rate": 96,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 158,
+          "diastolic_bp": 102,
+          "blood_sugar": 180,
+          "body_temp_c": 37.3,
+          "heart_rate": 100,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-4-patient-1",
+      "worker_key": "worker-4",
+      "name": "Demo Patient 4-1",
+      "age": 26,
+      "village": "Demo Village A",
+      "edd_days_ahead": 88,
+      "pattern": "routine",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 102,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 102,
+          "diastolic_bp": 66,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 102,
+          "diastolic_bp": 66,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 66,
+          "blood_sugar": 84,
+          "body_temp_c": 36.8,
+          "heart_rate": 70,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-4-patient-2",
+      "worker_key": "worker-4",
+      "name": "Demo Patient 4-2",
+      "age": 29,
+      "village": "Demo Village B",
+      "edd_days_ahead": 108,
+      "pattern": "recheck",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 82,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.8,
+          "heart_rate": 82,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 37,
+          "heart_rate": 82,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 62,
+          "blood_sugar": 104,
+          "body_temp_c": 36.6,
+          "heart_rate": 70,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-4-patient-3",
+      "worker_key": "worker-4",
+      "name": "Demo Patient 4-3",
+      "age": 31,
+      "village": "Demo Village C",
+      "edd_days_ahead": 128,
+      "pattern": "high-risk",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 138,
+          "diastolic_bp": 90,
+          "blood_sugar": 120,
+          "body_temp_c": 37,
+          "heart_rate": 88,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 146,
+          "diastolic_bp": 94,
+          "blood_sugar": 140,
+          "body_temp_c": 37.1,
+          "heart_rate": 92,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 152,
+          "diastolic_bp": 98,
+          "blood_sugar": 165,
+          "body_temp_c": 37.2,
+          "heart_rate": 96,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 158,
+          "diastolic_bp": 102,
+          "blood_sugar": 180,
+          "body_temp_c": 37.3,
+          "heart_rate": 100,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-5-patient-1",
+      "worker_key": "worker-5",
+      "name": "Demo Patient 5-1",
+      "age": 27,
+      "village": "Demo Village A",
+      "edd_days_ahead": 95,
+      "pattern": "routine",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 103,
+          "diastolic_bp": 62,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 75,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 103,
+          "diastolic_bp": 66,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 102,
+          "diastolic_bp": 67,
+          "blood_sugar": 80,
+          "body_temp_c": 36.6,
+          "heart_rate": 74,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 98,
+          "diastolic_bp": 66,
+          "blood_sugar": 83,
+          "body_temp_c": 36.8,
+          "heart_rate": 70,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "green",
+          "trend_reason": null
+        }
+      ]
+    },
+    {
+      "key": "worker-5-patient-2",
+      "worker_key": "worker-5",
+      "name": "Demo Patient 5-2",
+      "age": 29,
+      "village": "Demo Village B",
+      "edd_days_ahead": 115,
+      "pattern": "rising-bp",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 104,
+          "diastolic_bp": 68,
+          "blood_sugar": 88,
+          "body_temp_c": 36.8,
+          "heart_rate": 76,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 113,
+          "diastolic_bp": 74,
+          "blood_sugar": 90,
+          "body_temp_c": 36.8,
+          "heart_rate": 78,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 122,
+          "diastolic_bp": 80,
+          "blood_sugar": 92,
+          "body_temp_c": 36.9,
+          "heart_rate": 80,
+          "model_risk_level": "green",
+          "trend_adjusted_level": "yellow",
+          "trend_reason": "Blood pressure has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 131,
+          "diastolic_bp": 86,
+          "blood_sugar": 94,
+          "body_temp_c": 36.9,
+          "heart_rate": 82,
+          "model_risk_level": "yellow",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood pressure has risen steadily over your last 3 visits."
+        }
+      ]
+    },
+    {
+      "key": "worker-5-patient-3",
+      "worker_key": "worker-5",
+      "name": "Demo Patient 5-3",
+      "age": 32,
+      "village": "Demo Village C",
+      "edd_days_ahead": 135,
+      "pattern": "high-risk",
+      "visits": [
+        {
+          "days_ago": 84,
+          "systolic_bp": 138,
+          "diastolic_bp": 90,
+          "blood_sugar": 120,
+          "body_temp_c": 37,
+          "heart_rate": 88,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 56,
+          "systolic_bp": 146,
+          "diastolic_bp": 94,
+          "blood_sugar": 140,
+          "body_temp_c": 37.1,
+          "heart_rate": 92,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": null
+        },
+        {
+          "days_ago": 28,
+          "systolic_bp": 152,
+          "diastolic_bp": 98,
+          "blood_sugar": 165,
+          "body_temp_c": 37.2,
+          "heart_rate": 96,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        },
+        {
+          "days_ago": 7,
+          "systolic_bp": 158,
+          "diastolic_bp": 102,
+          "blood_sugar": 180,
+          "body_temp_c": 37.3,
+          "heart_rate": 100,
+          "model_risk_level": "red",
+          "trend_adjusted_level": "red",
+          "trend_reason": "Blood sugar has risen steadily over your last 3 visits."
+        }
+      ]
+    }
+  ]
+}

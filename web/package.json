@@ -9,7 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "check:risk": "node scripts/check-risk-parity.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
-    "check:sos": "node scripts/check-sos.mjs"
+    "check:sos": "node scripts/check-sos.mjs",
+    "check:demo-data": "node scripts/build-demo-dataset.mjs --check"
   },
   "dependencies": {
     "react": "^18.3.1",

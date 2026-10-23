@@ -24,7 +24,7 @@ from app.services.auth_service import (
     verify_refresh_token,
     verify_refresh_token_hash,
 )
-from app.services.demo_accounts import is_demo_identity
+from app.services.demo_accounts import is_demo_dataset_user, is_demo_identity
 from app.services.tokens import create_access_token, create_refresh_token
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -290,7 +290,8 @@ def _authenticate_worker(db: Session, payload: WorkerLoginRequest, *, event: str
     key = f"worker:{payload.phone.strip()}"
     _reject_demo_login_in_production(phone=payload.phone)
     user = db.query(User).filter(User.phone == payload.phone.strip()).first()
-    if user is None:
+    if user is None or (get_settings().is_production and is_demo_dataset_user(user)):
+        # Synthetic demo workers (identified by their demo ids) must never sign in to production.
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     _check_lockout(user)

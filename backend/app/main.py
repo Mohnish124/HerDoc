@@ -40,7 +40,7 @@ def check_no_demo_accounts() -> None:
         db.close()
     if count:
         raise RuntimeError(
-            f"Found {count} active demo account(s) (herdoc.local emails or seeded phones). "
+            f"Found {count} active demo account(s) (herdoc.local emails, seeded phones or demo-dataset workers). "
             "Deactivate or delete them before starting in production; never run the seed script against production."
         )
 
