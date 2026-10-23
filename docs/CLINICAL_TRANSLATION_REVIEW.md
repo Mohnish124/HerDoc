@@ -2,6 +2,9 @@
 
 **Status: NOT APPROVED. All 22 entries below are awaiting review by a qualified, native-speaker clinician.**
 
+The emergency (SOS) wording section further down adds 32 more entries (16 phrases × 2 languages),
+also awaiting review. Nothing in this document has been approved.
+
 The HerDoc worker web portal shows clinical guidance in English, Marathi (मराठी) and Hindi (हिन्दी).
 The phrases below carry clinical meaning (risk actions, trend warnings, vital-sign names). Their Marathi
 and Hindi wording was drafted by the development team and has **not** been checked by a clinician.
@@ -162,6 +165,166 @@ them in the same change so the interface stays consistent.
 | `register.errors.edd` | Expected delivery date (EDD) is required. | प्रसूतीची अपेक्षित तारीख (EDD) आवश्यक आहे. | प्रसव की अनुमानित तिथि (EDD) आवश्यक है। | Entry 1 |
 | `risk.trendLabel` | Trend: {reason} | कल: {reason} | रुझान: {reason} | Entries 5–7 |
 
+## Emergency (SOS) wording awaiting review (16 phrases × 2 languages = 32 entries)
+
+**Status: NOT APPROVED.** These phrases belong to the web SOS button (`web/src/components/worker/SosButton.jsx`)
+and the emergency notice shown on every worker page. They are safety wording rather than clinical advice, but a
+mistranslation could stop a health worker from calling for help, so they also need native-speaker review
+(ideally by someone with emergency-care experience). `emergency.body` is included because its meaning changed:
+it previously said HerDoc does not send alerts.
+
+Points for the reviewer:
+
+- Every message must make clear that **calling {number} (108) comes first** and that SOS only alerts the HerDoc
+  emergency contact group; it does **not** dispatch an ambulance.
+- Success wording (`sos.sent`) must not suggest help is on the way; it only means the server confirmed the alert was sent.
+- Failure wording must say plainly whether the alert was **not sent** or **may not have been delivered**.
+- `{number}` is replaced with 108 in the app and must stay in every translation.
+
+### S1. `emergency.body`
+
+English: Call {number} or your local emergency services first. The SOS button below alerts the HerDoc emergency contact group; it does not send an ambulance.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | आधी {number} किंवा तुमच्या स्थानिक आपत्कालीन सेवेला कॉल करा. खालील SOS बटण HerDoc आपत्कालीन संपर्क गटाला सूचना पाठवते; ते रुग्णवाहिका पाठवत नाही. | Awaiting review | | | | | | |
+| hi | पहले {number} या अपनी स्थानीय आपातकालीन सेवा को कॉल करें। नीचे दिया गया SOS बटन HerDoc आपातकालीन संपर्क समूह को सूचना भेजता है; यह एम्बुलेंस नहीं भेजता। | Awaiting review | | | | | | |
+
+### S2. `sos.button`
+
+English: SOS – Send emergency alert
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | SOS – आपत्कालीन सूचना पाठवा | Awaiting review | | | | | | |
+| hi | SOS – आपातकालीन सूचना भेजें | Awaiting review | | | | | | |
+
+### S3. `sos.confirmTitle`
+
+English: Send an emergency alert?
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | आपत्कालीन सूचना पाठवायची? | Awaiting review | | | | | | |
+| hi | आपातकालीन सूचना भेजें? | Awaiting review | | | | | | |
+
+### S4. `sos.confirmBody`
+
+English: This alerts the HerDoc emergency contact group with your name, phone number, facility and the time. Your location is not included. If someone needs help now, call {number} first.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | यामुळे HerDoc आपत्कालीन संपर्क गटाला तुमचे नाव, मोबाईल नंबर, केंद्र आणि वेळ पाठवली जाईल. तुमचे स्थान (लोकेशन) पाठवले जाणार नाही. कोणाला आत्ता मदत हवी असल्यास आधी {number} वर कॉल करा. | Awaiting review | | | | | | |
+| hi | यह HerDoc आपातकालीन संपर्क समूह को आपका नाम, मोबाइल नंबर, केंद्र और समय भेजेगा। आपका स्थान (लोकेशन) नहीं भेजा जाएगा। अगर किसी को अभी मदद चाहिए, तो पहले {number} पर कॉल करें। | Awaiting review | | | | | | |
+
+### S5. `sos.confirmSend`
+
+English: Yes, send alert
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | होय, सूचना पाठवा | Awaiting review | | | | | | |
+| hi | हाँ, सूचना भेजें | Awaiting review | | | | | | |
+
+### S6. `sos.cancel`
+
+English: Cancel
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | रद्द करा | Awaiting review | | | | | | |
+| hi | रद्द करें | Awaiting review | | | | | | |
+
+### S7. `sos.sending`
+
+English: Sending alert… do not close this page.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | सूचना पाठवली जात आहे… हे पेज बंद करू नका. | Awaiting review | | | | | | |
+| hi | सूचना भेजी जा रही है… यह पेज बंद न करें। | Awaiting review | | | | | | |
+
+### S8. `sos.sent`
+
+English: The server confirmed the alert was sent to the HerDoc emergency contact group. If help is needed now, also call {number}.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | सूचना HerDoc आपत्कालीन संपर्क गटाला पाठवल्याची सर्व्हरने पुष्टी केली आहे. आत्ता मदत हवी असल्यास {number} वरही कॉल करा. | Awaiting review | | | | | | |
+| hi | सर्वर ने पुष्टि की है कि सूचना HerDoc आपातकालीन संपर्क समूह को भेज दी गई है। अगर अभी मदद चाहिए, तो {number} पर भी कॉल करें। | Awaiting review | | | | | | |
+
+### S9. `sos.notConfigured`
+
+English: Emergency alerts are not set up on this server. The alert was NOT sent. Call {number} now.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | या सर्व्हरवर आपत्कालीन सूचना सेट केलेली नाही. सूचना पाठवली गेली नाही. आत्ता {number} वर कॉल करा. | Awaiting review | | | | | | |
+| hi | इस सर्वर पर आपातकालीन सूचना सेट नहीं है। सूचना नहीं भेजी गई। अभी {number} पर कॉल करें। | Awaiting review | | | | | | |
+
+### S10. `sos.failed`
+
+English: The alert could not be delivered. Call {number} now.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | सूचना पोहोचवता आली नाही. आत्ता {number} वर कॉल करा. | Awaiting review | | | | | | |
+| hi | सूचना नहीं पहुँचाई जा सकी। अभी {number} पर कॉल करें। | Awaiting review | | | | | | |
+
+### S11. `sos.unconfirmed`
+
+English: No confirmation was received, so the alert may not have been delivered. Call {number} now.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | पुष्टी मिळाली नाही, त्यामुळे सूचना पोहोचली नसण्याची शक्यता आहे. आत्ता {number} वर कॉल करा. | Awaiting review | | | | | | |
+| hi | कोई पुष्टि नहीं मिली, इसलिए हो सकता है सूचना न पहुँची हो। अभी {number} पर कॉल करें। | Awaiting review | | | | | | |
+
+### S12. `sos.offline`
+
+English: Cannot reach the server. The alert was not sent. Call {number} now.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | सर्व्हरशी संपर्क होऊ शकत नाही. सूचना पाठवली गेली नाही. आत्ता {number} वर कॉल करा. | Awaiting review | | | | | | |
+| hi | सर्वर से संपर्क नहीं हो पा रहा है। सूचना नहीं भेजी गई। अभी {number} पर कॉल करें। | Awaiting review | | | | | | |
+
+### S13. `sos.sessionExpired`
+
+English: Your session has expired, so the alert was not sent. Call {number} now, then sign in again.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | तुमचे सत्र संपले आहे, त्यामुळे सूचना पाठवली गेली नाही. आत्ता {number} वर कॉल करा, नंतर पुन्हा साइन इन करा. | Awaiting review | | | | | | |
+| hi | आपका सत्र समाप्त हो गया है, इसलिए सूचना नहीं भेजी गई। अभी {number} पर कॉल करें, फिर दोबारा साइन इन करें। | Awaiting review | | | | | | |
+
+### S14. `sos.forbidden`
+
+English: Your account cannot send alerts. Call {number} now.
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | तुमचे खाते सूचना पाठवू शकत नाही. आत्ता {number} वर कॉल करा. | Awaiting review | | | | | | |
+| hi | आपका खाता सूचना नहीं भेज सकता। अभी {number} पर कॉल करें। | Awaiting review | | | | | | |
+
+### S15. `sos.call`
+
+English: Call {number}
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | {number} वर कॉल करा | Awaiting review | | | | | | |
+| hi | {number} पर कॉल करें | Awaiting review | | | | | | |
+
+### S16. `sos.dismiss`
+
+English: Close
+
+| Lang | Current draft | Status | Reviewer name | Qualification | Date | Decision | Revised wording | Notes |
+|------|---------------|--------|---------------|---------------|------|----------|-----------------|-------|
+| mr | बंद करा | Awaiting review | | | | | | |
+| hi | बंद करें | Awaiting review | | | | | | |
+
 ## Applying an approved review
 
 1. Only after a decision is recorded in this file with the reviewer's name, qualification and date:
@@ -174,5 +337,7 @@ them in the same change so the interface stays consistent.
 
 | Language | Reviewer name | Clinical qualification | Registration / employer | Date | All entries approved? | Signature |
 |----------|---------------|------------------------|-------------------------|------|-----------------------|-----------|
-| Marathi | | | | | Not yet | |
-| Hindi | | | | | Not yet | |
+| Marathi (clinical, 11) | | | | | Not yet | |
+| Hindi (clinical, 11) | | | | | Not yet | |
+| Marathi (SOS, 16) | | | | | Not yet | |
+| Hindi (SOS, 16) | | | | | Not yet | |

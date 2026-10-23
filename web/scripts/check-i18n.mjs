@@ -27,6 +27,7 @@ const WORKER_SOURCES = [
   'components/EmergencyNotice.jsx',
   'components/LanguageSelect.jsx',
   'components/worker/WorkerViews.jsx',
+  'components/worker/SosButton.jsx',
   'risk/classifyVisit.js',
   'i18n/errors.js',
   'i18n/I18nContext.jsx',
@@ -133,7 +134,7 @@ try {
   for (const rel of WORKER_SOURCES) {
     const text = readFileSync(join(src, rel), 'utf8');
     for (const match of text.matchAll(/\bt\(\s*'([\w.]+)'/g)) used.add(match[1]);
-    for (const match of text.matchAll(/'((?:vitals|register)\.errors\.\w+|vitals\.\w+|errors\.\w+|login\.\w+|risk\.\w+(?:\.\w+)?|visitForm\.\w+|home\.\w+|patient\.\w+|visits\.\w+)'/g)) used.add(match[1]);
+    for (const match of text.matchAll(/'((?:vitals|register)\.errors\.\w+|vitals\.\w+|errors\.\w+|login\.\w+|risk\.\w+(?:\.\w+)?|visitForm\.\w+|home\.\w+|patient\.\w+|visits\.\w+|sos\.\w+|emergency\.\w+)'/g)) used.add(match[1]);
   }
   for (const level of m.RISK_LEVELS) used.add(`risk.level.${level}`).add(`risk.action.${level}`);
   for (const status of m.REVIEW_STATUSES) used.add(`review.statusValue.${status}`);
@@ -158,7 +159,7 @@ try {
   const stripTags = (html) => html.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
   const expectations = {
     login: ['login.submitWorker', 'login.phone', 'login.tabWorker'],
-    homePage: ['home.title', 'nav.myPatients', 'nav.signOut', 'emergency.title'],
+    homePage: ['home.title', 'nav.myPatients', 'nav.signOut', 'emergency.title', 'sos.button'],
     dashboard: ['home.metricRed', 'risk.action.red', 'review.statusValue.referred', 'risk.level.yellow', 'risk.none', 'review.awaiting'],
     registration: ['register.title', 'register.edd', 'register.submit'],
     visitPage: ['patient.loading'],

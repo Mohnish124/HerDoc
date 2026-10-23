@@ -1569,3 +1569,123 @@ body {
     flex: 1 1 auto;
   }
 }
+
+/* ---------------------------------------------------------------- Worker SOS (web) */
+
+.emergency-notice-text {
+  margin: 0 0 0.75rem;
+}
+
+.sos-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.sos-button {
+  min-height: 48px;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: #b91c1c;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 1rem;
+  white-space: normal;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.sos-button:hover:not(:disabled) {
+  background-color: #991b1b;
+}
+
+.sos-button:focus-visible,
+.sos-dialog .btn:focus-visible,
+.sos-result .btn:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.sos-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sos-result {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid;
+}
+
+.sos-result p {
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+
+.sos-result-sent {
+  background: var(--color-success-bg);
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.sos-result-failed {
+  background: #fff1f2;
+  border-color: #fca5a5;
+  color: #7f1d1d;
+}
+
+.sos-result-actions,
+.sos-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sos-result-actions .btn,
+.sos-dialog-actions .btn {
+  min-height: 44px;
+  white-space: normal;
+  padding: 0.55rem 1rem;
+}
+
+.sos-call {
+  text-decoration: none;
+}
+
+/* The notice styles its links dark red; the call button needs white text on red. */
+.emergency-notice a.sos-call {
+  color: #ffffff;
+}
+
+.sos-dialog h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.sos-dialog p {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+}
+
+.sos-sending {
+  font-weight: 700;
+  color: #7f1d1d !important;
+}
+
+@media (max-width: 640px) {
+  .sos-button,
+  .sos-result-actions .btn,
+  .sos-dialog-actions .btn {
+    width: 100%;
+  }
+
+  .sos-dialog {
+    padding: 1.25rem;
+  }
+}

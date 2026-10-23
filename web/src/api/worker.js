@@ -96,6 +96,65 @@ export async function fetchLatestReviews() {
   return latest;
 }
 
+// ---------------------------------------------------------------- Emergency SOS
+
+export const SOS_TIMEOUT_MS = 30000;
+// The web portal does not collect location; the existing endpoint's optional note says so to the recipients.
+export const WEB_SOS_NOTE = 'Sent from the HerDoc web portal. Location not included.';
+let sosInFlight = null;
+
+/**
+ * Ask the existing POST /api/emergency endpoint to relay an alert (backend Telegram service).
+ * Resolves to { kind } where kind is one of:
+ *   sent            server confirmed delivery ({status: "sent"}) — the ONLY success
+ *   notConfigured   503: alerts not set up on the server, nothing sent
+ *   failed          502: the server could not deliver it
+ *   unconfirmed     timed out, or any other/unexpected reply: delivery unknown
+ *   offline         the server could not be reached
+ *   sessionExpired  401 / refresh failed: not sent
+ *   forbidden       403: not sent
+ * A second call while one is pending returns the same promise, so repeated clicks send one request.
+ */
+export function sendEmergencyAlert({ timeoutMs = SOS_TIMEOUT_MS } = {}) {
+  if (!sosInFlight) {
+    sosInFlight = requestEmergencyAlert(timeoutMs).finally(() => {
+      sosInFlight = null;
+    });
+  }
+  return sosInFlight;
+}
+
+async function requestEmergencyAlert(timeoutMs) {
+  const controller = new AbortController();
+  let timer;
+  // Bounds the whole attempt, including any token refresh inside apiFetch.
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(Object.assign(new Error('timeout'), { sosTimeout: true }));
+    }, timeoutMs);
+  });
+  try {
+    const res = await Promise.race([
+      apiFetch('/api/emergency', { method: 'POST', body: JSON.stringify({ message: WEB_SOS_NOTE }), signal: controller.signal }),
+      timeout,
+    ]);
+    const data = await Promise.race([res.json().catch(() => ({})), timeout]);
+    if (res.ok && data?.status === 'sent') return { kind: 'sent' };
+    if (res.status === 503) return { kind: 'notConfigured' };
+    if (res.status === 502) return { kind: 'failed' };
+    if (res.status === 401) return { kind: 'sessionExpired' };
+    if (res.status === 403) return { kind: 'forbidden' };
+    return { kind: 'unconfirmed' };
+  } catch (error) {
+    if (error?.sosTimeout || error?.name === 'AbortError') return { kind: 'unconfirmed' }; // may still have been processed
+    if (/session expired/i.test(error?.message || '')) return { kind: 'sessionExpired' };
+    return { kind: 'offline' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function latestRisk(visit) {
   const flags = visit?.risk_flags || [];
   return flags.length ? flags[flags.length - 1] : null;
