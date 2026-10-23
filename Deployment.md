@@ -1,69 +1,123 @@
-# Deployment Overview
+# HERDOC — Deployment Overview
 
-## 1. Project overview
+## 1. Project Overview
 
-HERDOC is an offline-first maternal risk triage application. This DevOps setup works with the existing FastAPI backend, SQLAlchemy models and Alembic migrations, React/Vite web portal, and Expo mobile client. It does not replace the backend or claim a public deployment.
+HERDOC is an offline-first maternal risk triage application built with a FastAPI backend, SQLAlchemy, Alembic migrations, a React/Vite web portal, and an Expo mobile client.
 
-## 2. Architecture
+The web portal and backend have been deployed on Render, with the backend configured to connect to a MySQL database. The project also includes GitHub Actions CI, Docker, Ansible, Kubernetes manifests, Prometheus, and Grafana for DevOps implementation and monitoring.
 
-```mermaid
-flowchart LR
-  Mobile[Expo mobile app] -->|HTTPS API and sync| API[FastAPI HERDOC backend]
-  Web[React and Vite portal] -->|HTTPS API| API
-  API --> DB[(MySQL database)]
-  API -->|/metrics| Prom[Prometheus]
-  Prom --> Grafana[Grafana dashboard]
-  Git[GitHub push or pull request] --> Actions[GitHub Actions CI]
-  Actions --> Alembic[Alembic migrations]
-  Alembic --> Test[pytest]
-  API -. Docker image and Kubernetes manifests .-> K8s[Kubernetes Deployment and Service]
-  Ansible[Ansible playbook] -. configures Linux VM .-> API
-```
+### Live Deployment
 
-The application database remains MySQL. SQLite is configured only for the isolated GitHub Actions CI run. In Kubernetes or on a VM, HERDOC expects a reachable MySQL database URL supplied through a secret or protected environment file.
+- **Web Portal:** https://herdoc-web-demo.onrender.com
+- **Backend API:** https://herdoc.onrender.com
+- **Backend Health Check:** https://herdoc.onrender.com/health
+- **Backend Metrics:** https://herdoc.onrender.com/metrics
+- **GitHub Repository:** https://github.com/Mohnish124/HerDoc
 
-## 3. CI/CD pipeline
+> Note: The health and metrics endpoints may have different access or availability requirements depending on the production configuration. Verify them against the live service.
 
-`.github/workflows/herdoc-ci.yml` runs on pushes and pull requests targeting `main` or `master`: checkout, Python 3.11, install `backend/requirements.txt`, run `alembic upgrade head`, and run `pytest`. Both database commands use the same CI-only SQLite URL and environment variables (`PYTHONPATH`, `DATABASE_URL`, `JWT_SECRET`, and `WEB_ORIGIN`). The initial migration uses `CURRENT_TIMESTAMP`, which is accepted by SQLite and MySQL; this fixes the SQLite syntax failure discovered while validating the migration step.
-
-The workflow currently validates the backend; it does not build/publish an image or deploy to Kubernetes. Docker build and Kubernetes deployment are manual release steps documented below. No registry or cluster credentials are configured in CI.
+## 2. System Architecture
 
 ```mermaid
 flowchart TD
-  Push[GitHub push or pull request] --> Checkout[Checkout]
-  Checkout --> Python[Set up Python 3.11]
-  Python --> Deps[Install backend requirements]
-  Deps --> Migrate[alembic upgrade head on CI SQLite]
-  Migrate --> Pytest[pytest with the same database]
+    User[Healthcare Worker / Doctor / Admin]
+    Web[React + Vite Web Portal]
+    Mobile[Expo Mobile Application]
+    API[FastAPI Backend on Render]
+    DB[(MySQL Database)]
+    Git[GitHub Repository]
+    CI[GitHub Actions CI]
+    Monitoring[Prometheus + Grafana]
+    Docker[Docker Image]
+    K8s[Kubernetes Deployment]
+    Ansible[Ansible Configuration Management]
+
+    User --> Web
+    User --> Mobile
+    Web -->|HTTPS API| API
+    Mobile -->|HTTPS API and Sync| API
+    API --> DB
+    Git --> CI
+    Git -. Deployment workflow .-> API
+    API -->|Metrics endpoint| Monitoring
+    API -. Containerization .-> Docker
+    Docker -. Manual deployment option .-> K8s
+    Ansible -. VM configuration .-> API
 ```
 
-## 4. Ansible configuration management
+The production database is MySQL. SQLite is used only for isolated CI tests and local demo-data testing. Production database credentials and application secrets must be configured through protected environment variables rather than committed to Git.
 
-`ansible/inventory.example.ini` provides a reserved example address and the account `vboxuser`. Ansible is installed on the Ubuntu target itself, so copy it to the ignored local `ansible/inventory.ini` and use `ansible_connection=local` while running the controller as `vboxuser`; this avoids putting a machine-specific address in the inventory. A separate Linux controller can instead set `ansible_host` to the target's reachable address. `ansible/playbook.yml` installs Python runtime packages, creates a dedicated system user and group, copies only backend runtime and migration files, creates a virtual environment, installs dependencies, writes a root-managed mode `0640` environment file, runs Alembic once, and manages a systemd service. The systemd unit uses a restricted service account and basic process hardening.
+## 3. Render Deployment
 
-The operator supplies `HERDOC_DATABASE_URL` and a random `HERDOC_JWT_SECRET` in their shell. No secret values or machine-specific host addresses are stored in the committed example inventory. The user reports that the Ubuntu VM is running and SSH has been verified; this Windows environment has no Ansible CLI or WSL, so no Ansible syntax check or live playbook run has been performed here. Run the following commands on the Linux Ansible control node after copying and configuring its local inventory:
+HERDOC's web portal and backend API are deployed as separate services on Render.
 
-```powershell
-read -rsp 'MySQL URL: ' HERDOC_DATABASE_URL; echo
-export HERDOC_DATABASE_URL
-export HERDOC_JWT_SECRET="$(openssl rand -hex 32)"
-test -f ansible/inventory.ini || cp ansible/inventory.example.ini ansible/inventory.ini
-# Edit ansible/inventory.ini locally; use ansible_connection=local and ansible_user=vboxuser.
-ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --syntax-check
-ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --ask-become-pass
-unset HERDOC_DATABASE_URL HERDOC_JWT_SECRET
+### Deployment workflow
+
+1. Make changes in the local project.
+2. Run the relevant tests and build checks.
+3. Review the Git changes and ensure secrets and sensitive data are excluded.
+4. Commit and push the approved changes to the configured GitHub branch.
+5. Check the Render service build and deployment logs.
+6. Open the live website and verify the updated functionality.
+
+### Production verification checklist
+
+- [ ] The web portal loads over HTTPS.
+- [ ] The backend health endpoint responds as expected.
+- [ ] Login and authentication work.
+- [ ] Doctor, administrator, and worker features work according to their permissions.
+- [ ] API requests reach the backend.
+- [ ] Database-backed features work correctly.
+- [ ] Emergency/SOS behavior is verified using a safe test procedure.
+- [ ] No secrets or patient information appear in logs or source control.
+
+A successful Git push or local test does not by itself prove that the latest version is live. Confirm the deployment in Render before reporting it as complete.
+
+Render free services may sleep when idle, so the first request after inactivity can take longer.
+
+## 4. CI/CD Pipeline
+
+The GitHub Actions workflow is located at:
+
+`.github/workflows/herdoc-ci.yml`
+
+The workflow validates the backend when changes are pushed or pull requests target the configured branches.
+
+### Pipeline stages
+
+1. Check out the repository.
+2. Set up Python 3.11.
+3. Install backend dependencies.
+4. Run Alembic migrations against the CI-only SQLite database.
+5. Execute the backend test suite using pytest.
+
+```mermaid
+flowchart TD
+    A[GitHub Push or Pull Request] --> B[Checkout Repository]
+    B --> C[Set Up Python 3.11]
+    C --> D[Install Dependencies]
+    D --> E[Run Alembic Migrations]
+    E --> F[Run pytest]
+    F --> G[Review CI Results]
 ```
 
-The VM needs outbound package access and network access to the database. A real VM deployment must be run by the operator; the example reserved IP is intentionally not deployable.
+The workflow currently validates the backend. It does not build or publish a Docker image or deploy to Kubernetes. Render deployment should be verified through the configured Render workflow and deployment logs.
 
 ## 5. Docker
 
-`backend/Dockerfile` builds the real FastAPI backend on Python 3.11 slim, installs the backend requirements, copies app and Alembic files, runs as a non-root account, exposes port 8000, and starts Uvicorn. `backend/.dockerignore` excludes local environment files, virtual environments, test data, and caches. Configuration is passed through environment variables, not copied secrets.
+The backend Dockerfile is located at `backend/Dockerfile`.
 
-From the repository root, with a reachable MySQL database and safe local environment values:
+It builds the FastAPI backend using Python 3.11, installs the required dependencies, copies the application and migration files, and runs the API using a non-root user.
+
+Build the image from the repository root:
 
 ```powershell
 docker build -t herdoc-backend:latest -f backend/Dockerfile backend
+```
+
+Run the container with a reachable MySQL database and appropriate local environment variables:
+
+```powershell
 docker run --rm -p 8000:8000 `
   -e DATABASE_URL='mysql+pymysql://USER:PASSWORD@HOST:3306/herdoc?charset=utf8mb4' `
   -e JWT_SECRET='<random-32+-character-secret>' `
@@ -71,89 +125,137 @@ docker run --rm -p 8000:8000 `
   herdoc-backend:latest
 ```
 
-Run `alembic upgrade head` against that database once before starting the API container. `/health` is configured as the container health check. The image has not been published to a registry by this project.
+Run the required Alembic migrations against the intended database before starting the application. Never paste real production credentials into documentation or source control.
+
+The Docker workflow is a separate deployment option; it does not replace the existing Render deployment.
 
 ## 6. Kubernetes
 
-`k8s/` contains a ConfigMap, a placeholder-only Secret, a one-off migration Job, a two-replica Deployment, and a ClusterIP Service. Deployment health probes call the existing `/health` endpoint. The Deployment uses a rolling update with zero unavailable replicas and one surge replica, resource requests/limits, and revision history.
+The `k8s/` directory contains Kubernetes configuration for the backend, including:
 
-Build and load the image into a local cluster, replace Secret placeholders locally, and apply the migration Job before the Deployment. The detailed sequence is in [k8s/README.md](k8s/README.md). Demonstrate an update and rollback with:
+- ConfigMap
+- Placeholder-only Secret
+- Database migration Job
+- Two-replica Deployment
+- ClusterIP Service
+- Health probes and resource settings
+
+These manifests provide a deployment path for a suitable Kubernetes cluster. They do not automatically provision MySQL, a container registry, TLS, or an ingress controller.
+
+Before deploying, configure valid secrets, a reachable database, and an appropriate image. Apply the migration Job before rolling out the backend Deployment.
+
+Example rollout commands:
 
 ```bash
-kubectl set image deployment/herdoc-backend api=herdoc-backend:v2
 kubectl rollout status deployment/herdoc-backend
 kubectl rollout history deployment/herdoc-backend
 kubectl rollout undo deployment/herdoc-backend
-kubectl rollout status deployment/herdoc-backend
 ```
 
-Manifests do not provision MySQL, an ingress controller, TLS, or a registry. Supply a database endpoint and container image appropriate to the cluster. A successful runtime rollout/rollback is not claimed unless performed on an actual cluster.
+These commands should be reported as deployment evidence only after they have been run against a real cluster.
 
-## 7. Monitoring
+## 7. Ansible Configuration Management
 
-The backend exposes `/metrics` using the Prometheus Python client. It records request counts, request errors (4xx and 5xx), latency histograms, in-progress requests, and process uptime. Prometheus adds the `up` scrape-health series for availability. Metrics use route templates instead of raw request paths to keep label cardinality bounded.
+The `ansible/` directory contains an example inventory and playbook for configuring a Linux VM.
 
-`monitoring/prometheus/prometheus.yml` scrapes `host.docker.internal:8000`; `monitoring/docker-compose.yml` runs Prometheus and Grafana locally. Grafana provisioning installs the Prometheus datasource and the HERDOC overview dashboard with availability, p50/p95 latency, error rate, request rate, and process uptime panels.
+The playbook is designed to install runtime dependencies, create a dedicated service account, configure the application environment, run migrations, and manage the API through systemd.
 
-Start the HERDOC backend separately with a reachable database, then start monitoring:
+Configure the local inventory and required environment variables on the Ansible control node before running it.
+
+```bash
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --syntax-check
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --ask-become-pass
+```
+
+The example inventory is not a real production host configuration. A successful Ansible deployment should only be claimed after execution and verification on the target VM.
+
+## 8. Monitoring with Prometheus and Grafana
+
+The FastAPI backend exposes a `/metrics` endpoint using the Prometheus Python client.
+
+The metrics implementation records operational information such as:
+
+- Request counts
+- HTTP request errors
+- Request latency histograms
+- Requests currently in progress
+- Process uptime
+
+The `monitoring/` directory contains Prometheus configuration, Docker Compose setup, and Grafana provisioning for local monitoring.
+
+Start the monitoring services locally:
 
 ```powershell
 $env:GRAFANA_ADMIN_PASSWORD = '<temporary-local-dashboard-password>'
 docker compose -f monitoring/docker-compose.yml up -d
 ```
 
-Open Prometheus at `http://localhost:9090` and Grafana at `http://localhost:3001` (username `admin`, password set in the environment). The backend metrics endpoint is `http://localhost:8000/metrics`. `host.docker.internal` works on Docker Desktop and is mapped to the host gateway in Compose for Linux Docker engines. For Kubernetes scraping, change the Prometheus target to the service DNS name, for example `herdoc-backend.default.svc.cluster.local:8000`, and run Prometheus inside a network that can reach the service.
+Typical local endpoints:
 
-## 8. Logging
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3001
+- Local backend metrics: http://localhost:8000/metrics
 
-The HTTP middleware writes one operational key/value log line per request with method, route template, status code, and duration; server errors are logged at error level. Existing application services also use Python logging for security and operational events. Do not log request bodies, authorization headers, tokens, or secret environment values.
+These local monitoring endpoints are separate from the deployed Render services. To monitor Render, configure an appropriate reachable scrape target and network access; do not assume the local Docker configuration can scrape a remote service without adjustment.
 
-- Docker: `docker logs <container-name>`
-- Kubernetes: `kubectl logs deployment/herdoc-backend --all-pods=true`
-- systemd: `sudo journalctl -u herdoc-api -f`
+## 9. Logging
 
-## 9. Challenges
+The backend includes request logging for operational visibility. Request logs include information such as the HTTP method, route template, status code, and request duration.
 
-- The initial GitHub Actions run used a fresh SQLite database without running schema migrations, causing missing `users` and `facilities` tables.
-- Running the migration locally exposed a second issue: the initial Alembic revision emitted `DEFAULT now()`, which SQLite rejected. The migration now uses portable `CURRENT_TIMESTAMP` defaults so the requested SQLite CI migration can create the schema.
-- Real Ansible, Docker, and Kubernetes execution depends on external Linux/daemon/cluster resources and credentials. Configuration files alone are not deployment evidence.
+Do not log request bodies, authorization headers, tokens, patient information, or secret environment values.
 
-## 10. Lessons learned
+Useful commands for the different deployment environments include:
 
-- CI databases need a reproducible schema setup before database-backed tests.
-- Validate migrations against the same database engine and URL used by CI.
-- Keep runtime secrets outside source control and inject them at deploy time.
-- Readiness checks and metrics help operators distinguish an unavailable service from a healthy one; a deployment manifest does not prove a rollout happened.
-
-## 11. Commands
-
-Backend CI sequence from `backend/` (PowerShell):
-
-```powershell
-$env:PYTHONPATH = '.'
-$env:DATABASE_URL = 'sqlite:///./test.db'
-$env:JWT_SECRET = 'test-jwt-secret-key-for-ci'
-$env:WEB_ORIGIN = 'http://localhost:3000'
-alembic upgrade head
-pytest
+```bash
+docker logs <container-name>
+kubectl logs deployment/herdoc-backend --all-pods=true
+sudo journalctl -u herdoc-api -f
 ```
 
-Build/run Docker with variables as shown in Section 5. Deploy, check rollout, and rollback with the commands in Section 6. Check metrics at `http://localhost:8000/metrics`, then start Prometheus/Grafana with Section 7. Run Ansible syntax check and deployment with Section 4.
+For Render, inspect the relevant service's logs in the Render dashboard.
 
-## 12. Evidence checklist
+## 10. Demo Data and Production Safety
 
-Capture real screenshots/output after running the relevant commands:
+HERDOC includes a demo-data seeding utility intended for isolated local SQLite testing and demonstrations.
 
-1. GitHub Actions run showing the migration and pytest steps succeeding.
-2. Ansible syntax-check output and, if available, actual play recap from a Linux VM.
-3. Docker image build output and a running container health result.
-4. Kubernetes Deployment/Service, `rollout status`, `rollout history`, update, and rollback output from a real cluster.
-5. `http://localhost:8000/metrics` output showing HERDOC metrics after requests.
-6. Prometheus target page showing `herdoc-backend` UP.
-7. Grafana HERDOC API Overview dashboard populated with real scrape/request data.
+**Do not run the demo seeding utility against the production Render/Aiven database.**
 
-Do not present configuration screenshots as proof of runtime deployments. No screenshots or runtime evidence are included in this repository.
+Demo accounts and synthetic patient records must be provisioned through a separately reviewed and explicitly authorized process. Do not use real patient data in screenshots, test fixtures, or public demonstrations.
 
-## 13. Optional bonus challenge
+## 11. Challenges and Lessons Learned
 
-No external challenge participation is claimed or included. Pursue a bonus challenge only if HERDOC is actually entered and participation can be evidenced legitimately.
+### Challenges
+
+- The CI workflow initially encountered database schema issues because migrations had not been applied before database-backed tests.
+- SQLite exposed a migration compatibility issue involving timestamp defaults, which required a portable migration expression.
+- Docker, Ansible, and Kubernetes workflows require the appropriate local services, credentials, and infrastructure.
+- A successful local build does not prove that the production service has deployed the same version.
+
+### Lessons learned
+
+- Run database migrations before database-backed tests.
+- Validate migrations against the database engine used by the relevant environment.
+- Keep secrets outside source control.
+- Use health checks, logs, and metrics to diagnose runtime issues.
+- Verify deployments in the target environment instead of treating configuration files as proof of execution.
+- Keep synthetic demo data separate from production patient records.
+
+## 12. Evidence Checklist
+
+Capture genuine screenshots or command output for the following items when demonstrating the project:
+
+1. Render web service showing the deployed frontend.
+2. Render backend service and deployment logs.
+3. Live website showing successful login and key workflows.
+4. GitHub Actions workflow with migration and test steps completed.
+5. Docker image build and container health output.
+6. Ansible syntax check and play recap, if executed.
+7. Kubernetes Deployment and Service, rollout status, and rollback output, if executed.
+8. Prometheus metrics and target status.
+9. Grafana dashboard populated with real monitoring data.
+
+Do not present a configuration file or an unexecuted command as evidence that a deployment or monitoring setup has run successfully.
+
+## 13. Optional Bonus Challenge
+
+No external challenge participation is claimed in this documentation. Include such a claim only if HERDOC is actually entered and participation can be verified.
